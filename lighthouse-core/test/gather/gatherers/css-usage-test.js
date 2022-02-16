@@ -86,6 +86,9 @@ describe('.getArtifact', () => {
       .mockResponse('DOM.enable')
       .mockResponse('CSS.enable')
       .mockResponse('CSS.startRuleUsageTracking')
+      .mockResponse('CSS.getStyleSheetText', () => {
+        throw new Error('Sheet not found');
+      })
       .mockResponse('CSS.getStyleSheetText', {text: 'CSS text 2'})
       .mockResponse('CSS.stopRuleUsageTracking', {
         ruleUsage: [
@@ -129,6 +132,50 @@ describe('.getArtifact', () => {
         },
       ],
     });
+  });
+
+  it('throws if it cannot get content of sheet', async () => {
+    const driver = createMockDriver();
+    driver.defaultSession.on
+      .mockEvent('CSS.styleSheetAdded', {header: {styleSheetId: '1'}})
+      .mockEvent('CSS.styleSheetAdded', {header: {styleSheetId: '2'}});
+    driver.defaultSession.sendCommand
+      .mockResponse('DOM.enable')
+      .mockResponse('CSS.enable')
+      .mockResponse('CSS.startRuleUsageTracking')
+      .mockResponse('CSS.getStyleSheetText', () => {
+        throw new Error('Sheet not found');
+      })
+      .mockResponse('CSS.getStyleSheetText', {text: 'CSS text 2'})
+      .mockResponse('CSS.stopRuleUsageTracking', {
+        ruleUsage: [
+          {styleSheetId: '2', used: false},
+        ],
+      })
+      .mockResponse('CSS.disable')
+      .mockResponse('DOM.disable');
+
+    /** @type {LH.Gatherer.FRTransitionalContext} */
+    const context = {
+      driver: driver.asDriver(),
+      url: 'https://example.com',
+      gatherMode: 'timespan',
+      computedCache: new Map(),
+      baseArtifacts: createMockBaseArtifacts(),
+      dependencies: {},
+      settings: defaultSettings,
+    };
+
+    const gatherer = new CSSUsage();
+    await gatherer.startInstrumentation(context);
+
+    // Force events to emit.
+    await flushAllTimersAndMicrotasks(1);
+
+    await gatherer.stopInstrumentation(context);
+    const artifactPromise = gatherer.getArtifact(context);
+
+    await expect(artifactPromise).rejects.toThrow('Sheet not found');
   });
 
   it('dedupes stylesheets', async () => {

@@ -13,21 +13,19 @@ const FRGatherer = require('../../fraggle-rock/gather/base-gatherer.js');
 class CSSUsage extends FRGatherer {
   constructor() {
     super();
-    /** @type {Array<LH.Crdp.CSS.StyleSheetAddedEvent>} */
-    this._stylesheets = [];
-    /** @param {LH.Crdp.CSS.StyleSheetAddedEvent} sheet */
-    this._onStylesheetAdded = sheet => this._stylesheets.push(sheet);
-    /** @param {LH.Crdp.CSS.StyleSheetRemovedEvent} sheet */
-    this._onStylesheetRemoved = sheet => {
-      // We can't fetch the content of removed stylesheets, so we ignore them completely.
-      const styleSheetId = sheet.styleSheetId;
-      this._stylesheets = this._stylesheets.filter(s => s.header.styleSheetId !== styleSheetId);
-    };
+    /** @type {LH.Gatherer.FRProtocolSession|undefined} */
+    this._session = undefined;
+    /** @type {Map<string, Promise<LH.Artifacts.CSSStyleSheetInfo|Error>>} */
+    this._sheetPromises = new Map();
+    /** @type {Map<string, Promise<LH.Artifacts.CSSStyleSheetInfo|Error>>} */
+    this._removedSheetPromises = new Map();
     /**
      * Initialize as undefined so we can assert results are fetched.
      * @type {LH.Crdp.CSS.RuleUsage[]|undefined}
      */
     this._ruleUsage = undefined;
+    this._onStylesheetAdded = this._onStylesheetAdded.bind(this);
+    this._onStylesheetRemoved = this._onStylesheetRemoved.bind(this);
   }
 
   /** @type {LH.Gatherer.GathererMeta} */
@@ -36,10 +34,38 @@ class CSSUsage extends FRGatherer {
   };
 
   /**
+   * @param {LH.Crdp.CSS.StyleSheetAddedEvent} event
+   */
+  async _onStylesheetAdded(event) {
+    if (!this._session) throw new Error('Session not initialized');
+    const styleSheetId = event.header.styleSheetId;
+    const sheetPromise = this._session.sendCommand('CSS.getStyleSheetText', {styleSheetId})
+      .then(content => ({
+        header: event.header,
+        content: content.text,
+      }))
+      .catch(err => /** @type {Error} */ (err));
+    this._sheetPromises.set(styleSheetId, sheetPromise);
+  }
+
+  /**
+   * @param {LH.Crdp.CSS.StyleSheetRemovedEvent} event
+   */
+  async _onStylesheetRemoved(event) {
+    const styleSheetId = event.styleSheetId;
+    const sheet = this._sheetPromises.get(styleSheetId);
+    if (sheet) {
+      this._sheetPromises.delete(styleSheetId);
+      this._removedSheetPromises.set(styleSheetId, sheet);
+    }
+  }
+
+  /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
   async startCSSUsageTracking(context) {
     const session = context.driver.defaultSession;
+    this._session = session;
     session.on('CSS.styleSheetAdded', this._onStylesheetAdded);
     session.on('CSS.styleSheetRemoved', this._onStylesheetRemoved);
 
@@ -48,13 +74,6 @@ class CSSUsage extends FRGatherer {
     await session.sendCommand('CSS.startRuleUsageTracking');
   }
 
-  /**
-   * @param {LH.Gatherer.FRTransitionalContext} context
-   */
-  async startInstrumentation(context) {
-    if (context.gatherMode !== 'timespan') return;
-    await this.startCSSUsageTracking(context);
-  }
 
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
@@ -65,6 +84,13 @@ class CSSUsage extends FRGatherer {
     this._ruleUsage = coverageResponse.ruleUsage;
     session.off('CSS.styleSheetAdded', this._onStylesheetAdded);
     session.off('CSS.styleSheetRemoved', this._onStylesheetRemoved);
+  }
+  /**
+   * @param {LH.Gatherer.FRTransitionalContext} context
+   */
+  async startInstrumentation(context) {
+    if (context.gatherMode !== 'timespan') return;
+    await this.startCSSUsageTracking(context);
   }
 
   /**
@@ -93,24 +119,25 @@ class CSSUsage extends FRGatherer {
       await this.stopCSSUsageTracking(context);
     }
 
-    // Fetch style sheet content in parallel.
-    const promises = this._stylesheets.map(sheet => {
-      const styleSheetId = sheet.header.styleSheetId;
-      return session.sendCommand('CSS.getStyleSheetText', {styleSheetId}).then(content => {
-        return {
-          header: sheet.header,
-          content: content.text,
-        };
-      });
-    });
-    const styleSheetInfo = await Promise.all(promises);
+    /** @type {Map<string, LH.Artifacts.CSSStyleSheetInfo>} */
+    const dedupedStylesheets = new Map();
+    const sheets = await Promise.all(this._sheetPromises.values());
+    const removedSheets = await Promise.all(this._removedSheetPromises.values());
+
+    for (const sheet of removedSheets) {
+      // If the sheet was removed, we can ignore any errors when fetching the content.
+      if (sheet instanceof Error) continue;
+      dedupedStylesheets.set(sheet.content, sheet);
+    }
+
+    for (const sheet of sheets) {
+      // If the sheet was not removed, we should throw any errors when fetching the content.
+      if (sheet instanceof Error) throw sheet;
+      dedupedStylesheets.set(sheet.content, sheet);
+    }
 
     await session.sendCommand('CSS.disable');
     await session.sendCommand('DOM.disable');
-
-    const dedupedStylesheets = new Map(styleSheetInfo.map(sheet => {
-      return [sheet.content, sheet];
-    }));
 
     if (!this._ruleUsage) throw new Error('Issue collecting rule usages');
 
