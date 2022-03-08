@@ -3217,7 +3217,7 @@ detect-newline@^3.0.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.1.0.tgz#576f5dfc63ae1a192ff192d8ad3af6308991b651"
   integrity sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==
 
-devtools-protocol@0.0.960912, devtools-protocol@0.0.975298:
+devtools-protocol@0.0.969999, devtools-protocol@0.0.975298:
   version "0.0.975298"
   resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.975298.tgz#b134e8c98324f12bb57ad660639e73bc77649821"
   integrity sha512-RNQxbC4gOlaojOPc47YJvwhx9LsmVBBgmCw0BoNRnC2Q83wqMuc/nJd+jeXQe0kcu+R2O6f83OmaE+gUejQQOw==
@@ -6659,14 +6659,14 @@ punycode@^2.1.0, punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-puppeteer@^13.4.0:
-  version "13.4.0"
-  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-13.4.0.tgz#d2366542fb0fc7af0cc68719c048a68363a0a940"
-  integrity sha512-WrHtFF2WpYC6KWFP4OCPOHWCjW4f8tFk+FkYZeNQ8/lHn+asjXBEXiIWauune8CY2xIHBVExGas+WI6Ay8/MgQ==
+puppeteer@^13.5.0:
+  version "13.5.0"
+  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-13.5.0.tgz#fd30692fbed18bd4964dce3517cc952af9b45d7d"
+  integrity sha512-raPr2YZ3RZLboGwt7jJgusJTBRDaVEUiPOSOWWFLV1oj07xqT5UqqbjmNXFXlMlkhF/NwmcEInW64VhvyllVdw==
   dependencies:
     cross-fetch "3.1.5"
     debug "4.3.3"
-    devtools-protocol "0.0.960912"
+    devtools-protocol "0.0.969999"
     extract-zip "2.0.1"
     https-proxy-agent "5.0.0"
     pkg-dir "4.2.0"
