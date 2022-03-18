@@ -8,9 +8,23 @@
 const assert = require('assert').strict;
 const UnusedJavaScript = require('../../../audits/byte-efficiency/unused-javascript.js');
 const networkRecordsToDevtoolsLog = require('../../network-records-to-devtools-log.js');
-const {loadSourceMapAndUsageFixture} = require('../../test-utils.js');
+const {loadSourceMapAndUsageFixture, createScript} = require('../../test-utils.js');
 
 /* eslint-env jest */
+
+const scriptUrlToId = new Map();
+
+/**
+ * @param {string} url
+ */
+function getScriptId(url) {
+  let id = scriptUrlToId.get(url);
+  if (!id) {
+    id = String(scriptUrlToId.size + 1);
+    scriptUrlToId.set(url, id);
+  }
+  return id;
+}
 
 /**
  * @param {string} url
@@ -39,13 +53,12 @@ function generateUsage(url, ranges) {
     };
   });
 
-  return {url, functions};
+  return {scriptId: getScriptId(url), url, functions};
 }
 
 function makeJsUsage(...usages) {
   return usages.reduce((acc, cur) => {
-    acc[cur.url] = acc[cur.url] || [];
-    acc[cur.url].push(cur);
+    acc[cur.scriptId] = cur;
     return acc;
   }, {});
 }
@@ -61,7 +74,7 @@ describe('UnusedJavaScript audit', () => {
   const recordB = generateRecord(`${domain}/scriptB.js`, 50000, 'Script');
   const recordInline = generateRecord(`${domain}/inline.html`, 1000000, 'Document');
 
-  it('should merge duplicates', async () => {
+  it('should work', async () => {
     const context = {
       computedCache: new Map(),
       options: {
@@ -71,6 +84,8 @@ describe('UnusedJavaScript audit', () => {
     };
     const networkRecords = [recordA, recordB, recordInline];
     const artifacts = {
+      Scripts: [scriptA, scriptB, scriptUnknown, inlineA, inlineB]
+        .map((usage) => createScript({...usage, functions: undefined})),
       JsUsage: makeJsUsage(scriptA, scriptB, scriptUnknown, inlineA, inlineB),
       devtoolsLogs: {defaultPass: networkRecordsToDevtoolsLog(networkRecords)},
       SourceMaps: [],
@@ -81,15 +96,20 @@ describe('UnusedJavaScript audit', () => {
       'https://www.google.com/inline.html',
     ]);
 
+    // Only two scripts should meet the unused bytes threshold.
+    expect(result.items).toHaveLength(2);
+
     const scriptBWaste = result.items[0];
+    assert.equal(scriptBWaste.url, `${domain}/scriptB.js`);
     assert.equal(scriptBWaste.totalBytes, 50000);
     assert.equal(scriptBWaste.wastedBytes, 12500);
     assert.equal(scriptBWaste.wastedPercent, 25);
 
-    const inlineWaste = result.items[1];
-    assert.equal(inlineWaste.totalBytes, 21000);
-    assert.equal(inlineWaste.wastedBytes, 6000);
-    assert.equal(Math.round(inlineWaste.wastedPercent), 29);
+    const inlineBWaste = result.items[1];
+    assert.equal(inlineBWaste.url, `${domain}/inline.html`);
+    assert.equal(inlineBWaste.totalBytes, 15000);
+    assert.equal(inlineBWaste.wastedBytes, 5000);
+    assert.equal(Math.round(inlineBWaste.wastedPercent), 33);
   });
 
   it('should augment when provided source maps', async () => {
@@ -109,8 +129,8 @@ describe('UnusedJavaScript audit', () => {
     const artifacts = {
       JsUsage: makeJsUsage(usage),
       devtoolsLogs: {defaultPass: networkRecordsToDevtoolsLog(networkRecords)},
-      SourceMaps: [{scriptUrl: url, map}],
-      ScriptElements: [{src: url, content}],
+      SourceMaps: [{scriptId: 'squoosh', scriptUrl: url, map}],
+      Scripts: [{scriptId: 'squoosh', url, content}].map(createScript),
     };
     const result = await UnusedJavaScript.audit_(artifacts, networkRecords, context);
 

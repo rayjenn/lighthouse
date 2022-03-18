@@ -135,25 +135,26 @@ function getLegacyJavascriptResults(code, map, {sourceMaps}) {
   // Much faster than running Lighthouse.
   const documentUrl = 'http://localhost/index.html'; // These URLs don't matter.
   const scriptUrl = 'https://localhost/main.bundle.min.js';
+  const scriptId = '10001';
   const networkRecords = [
     {url: documentUrl, requestId: '1000.1', resourceType: /** @type {const} */ ('Document')},
     {url: scriptUrl, requestId: '1000.2'},
   ];
   const devtoolsLogs = networkRecordsToDevtoolsLog(networkRecords);
 
-  /** @type {Pick<LH.Artifacts, 'devtoolsLogs'|'URL'|'ScriptElements'|'SourceMaps'>} */
+  /** @type {Pick<LH.Artifacts, 'devtoolsLogs'|'URL'|'Scripts'|'SourceMaps'>} */
   const artifacts = {
     URL: {finalUrl: documentUrl, requestedUrl: documentUrl},
     devtoolsLogs: {
       [LegacyJavascript.DEFAULT_PASS]: devtoolsLogs,
     },
-    ScriptElements: [
-      // @ts-expect-error - partial ScriptElement excluding unused DOM properties
-      {src: scriptUrl, requestId: '1000.2', content: code},
+    Scripts: [
+      // @ts-expect-error - partial Script excluding unused properties
+      {scriptId, url: scriptUrl, content: code},
     ],
     SourceMaps: [],
   };
-  if (sourceMaps) artifacts.SourceMaps = [{scriptUrl, map}];
+  if (sourceMaps) artifacts.SourceMaps = [{scriptId, scriptUrl, map}];
   // @ts-expect-error: partial Artifacts.
   return LegacyJavascript.audit_(artifacts, networkRecords, {
     computedCache: new Map(),

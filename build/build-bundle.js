@@ -94,7 +94,7 @@ async function build(entryPath, distPath, opts = {minify: true}) {
     'intl-pluralrules',
     'intl',
     'pako/lib/zlib/inflate.js',
-    'raven',
+    '@sentry/node',
     'source-map',
     'ws',
     require.resolve('../lighthouse-core/gather/connections/cri.js'),
@@ -131,6 +131,9 @@ async function build(entryPath, distPath, opts = {minify: true}) {
           // This package exports to default in a way that causes Rollup to get confused,
           // resulting in MessageFormat being undefined.
           'require(\'intl-messageformat\').default': 'require(\'intl-messageformat\')',
+          // Below we replace lighthouse-logger with a local copy, which is ES modules. Need
+          // to change every require of the package to reflect this.
+          'require(\'lighthouse-logger\');': 'require(\'lighthouse-logger\').default;',
           // Rollup doesn't replace this, so let's manually change it to false.
           'require.main === module': 'false',
           // TODO: Use globalThis directly.

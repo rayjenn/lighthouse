@@ -28,7 +28,7 @@ const expectations = {
       inputs: [
         {
           parentFormIndex: 0,
-          labelIndicies: [
+          labelIndices: [
             0,
           ],
           id: 'name_cc1',
@@ -43,7 +43,7 @@ const expectations = {
         },
         {
           parentFormIndex: 0,
-          labelIndicies: [
+          labelIndices: [
             1,
           ],
           id: 'CCNo1',
@@ -58,7 +58,7 @@ const expectations = {
         },
         {
           parentFormIndex: 0,
-          labelIndicies: [
+          labelIndices: [
             2,
           ],
           id: 'CCExpiresMonth1',
@@ -72,7 +72,7 @@ const expectations = {
         },
         {
           parentFormIndex: 0,
-          labelIndicies: [],
+          labelIndices: [],
           id: 'CCExpiresYear1',
           name: '',
           type: 'select-one',
@@ -84,7 +84,7 @@ const expectations = {
         },
         {
           parentFormIndex: 0,
-          labelIndicies: [
+          labelIndices: [
             3,
           ],
           id: 'cvc1',
@@ -99,7 +99,7 @@ const expectations = {
         },
         {
           parentFormIndex: 0,
-          labelIndicies: [],
+          labelIndices: [],
           id: '',
           name: '',
           type: 'submit',
@@ -111,7 +111,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: 'fill',
           name: '',
           type: 'button',
@@ -123,7 +123,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             4,
           ],
           id: 'name_shipping',
@@ -137,7 +137,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             5,
           ],
           id: 'address_shipping',
@@ -151,7 +151,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             6,
           ],
           id: 'city_shipping',
@@ -165,7 +165,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: 'state_shipping',
           name: '',
           type: 'select-one',
@@ -176,7 +176,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             8,
           ],
           id: 'zip_shipping',
@@ -190,7 +190,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: '',
           name: '',
           type: 'button',
@@ -202,7 +202,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             9,
           ],
           id: 'name_billing',
@@ -216,7 +216,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             10,
           ],
           id: 'address_billing',
@@ -230,7 +230,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             11,
           ],
           id: 'city_billing',
@@ -244,7 +244,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             12,
           ],
           id: 'state_billing',
@@ -257,7 +257,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             13,
           ],
           id: 'zip_billing',
@@ -271,7 +271,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: 'submit2',
           name: '',
           type: 'button',
@@ -283,7 +283,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             14,
           ],
           id: 'name_cc2',
@@ -297,7 +297,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             15,
           ],
           id: 'CCNo2',
@@ -311,7 +311,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             16,
           ],
           id: 'CCExpiresMonth2',
@@ -324,7 +324,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: 'CCExpiresYear',
           name: '',
           type: 'select-one',
@@ -335,7 +335,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             17,
           ],
           id: 'cvc2',
@@ -349,7 +349,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             18,
           ],
           id: 'mobile-number',
@@ -363,7 +363,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [
+          labelIndices: [
             19,
           ],
           id: 'random',
@@ -377,7 +377,7 @@ const expectations = {
           },
         },
         {
-          labelIndicies: [],
+          labelIndices: [],
           id: 'submit3',
           name: '',
           type: 'button',

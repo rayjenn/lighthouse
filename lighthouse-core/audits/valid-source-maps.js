@@ -44,22 +44,22 @@ class ValidSourceMaps extends Audit {
       title: str_(UIStrings.title),
       failureTitle: str_(UIStrings.failureTitle),
       description: str_(UIStrings.description),
-      requiredArtifacts: ['ScriptElements', 'SourceMaps', 'URL'],
+      requiredArtifacts: ['Scripts', 'SourceMaps', 'URL'],
     };
   }
 
   /**
    * Returns true if the size of the script exceeds a static threshold.
-   * @param {LH.Artifacts.ScriptElement} scriptElement
+   * @param {LH.Artifacts.Script} script
    * @param {string} finalURL
    * @return {boolean}
    */
-  static isLargeFirstPartyJS(scriptElement, finalURL) {
-    if (scriptElement.content === null) return false;
+  static isLargeFirstPartyJS(script, finalURL) {
+    if (!script.length) return false;
 
-    const isLargeJS = scriptElement.content.length >= LARGE_JS_BYTE_THRESHOLD;
-    const isFirstPartyJS = scriptElement.src ?
-      thirdPartyWeb.isFirstParty(scriptElement.src, thirdPartyWeb.getEntity(finalURL)) : false;
+    const isLargeJS = script.length >= LARGE_JS_BYTE_THRESHOLD;
+    const isFirstPartyJS = script.url ?
+      thirdPartyWeb.isFirstParty(script.url, thirdPartyWeb.getEntity(finalURL)) : false;
 
     return isLargeJS && isFirstPartyJS;
   }
@@ -75,16 +75,14 @@ class ValidSourceMaps extends Audit {
 
     let missingMapsForLargeFirstPartyFile = false;
     const results = [];
-    for (const scriptElement of artifacts.ScriptElements) {
-      if (!scriptElement.src) continue; // TODO: inline scripts, how do they work?
-
-      const sourceMap = SourceMaps.find(m => m.scriptUrl === scriptElement.src);
+    for (const script of artifacts.Scripts) {
+      const sourceMap = SourceMaps.find(m => m.scriptId === script.scriptId);
       const errors = [];
-      const isLargeFirstParty = this.isLargeFirstPartyJS(scriptElement, artifacts.URL.finalUrl);
+      const isLargeFirstParty = this.isLargeFirstPartyJS(script, artifacts.URL.finalUrl);
 
       if (isLargeFirstParty && (!sourceMap || !sourceMap.map)) {
         missingMapsForLargeFirstPartyFile = true;
-        isMissingMapForLargeFirstPartyScriptUrl.add(scriptElement.src);
+        isMissingMapForLargeFirstPartyScriptUrl.add(script.url);
         errors.push({error: str_(UIStrings.missingSourceMapErrorMessage)});
       }
 
@@ -107,7 +105,7 @@ class ValidSourceMaps extends Audit {
 
       if (sourceMap || errors.length) {
         results.push({
-          scriptUrl: scriptElement.src,
+          scriptUrl: script.url,
           sourceMapUrl: sourceMap?.sourceMapUrl,
           subItems: {
             type: /** @type {const} */ ('subitems'),

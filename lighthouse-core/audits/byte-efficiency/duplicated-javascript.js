@@ -11,8 +11,8 @@
 
 const ByteEfficiencyAudit = require('./byte-efficiency-audit.js');
 const ModuleDuplication = require('../../computed/module-duplication.js');
-const NetworkAnalyzer = require('../../lib/dependency-graph/simulator/network-analyzer.js');
 const i18n = require('../../lib/i18n/i18n.js');
+const {getRequestForScript} = require('../../lib/script-helpers.js');
 
 const UIStrings = {
   /** Imperative title of a Lighthouse audit that tells the user to remove duplicate JavaScript from their code. This is displayed in a list of audit titles that Lighthouse generates. */
@@ -48,7 +48,7 @@ class DuplicatedJavascript extends ByteEfficiencyAudit {
       title: str_(UIStrings.title),
       description: str_(UIStrings.description),
       scoreDisplayMode: ByteEfficiencyAudit.SCORING_MODES.NUMERIC,
-      requiredArtifacts: ['devtoolsLogs', 'traces', 'SourceMaps', 'ScriptElements',
+      requiredArtifacts: ['devtoolsLogs', 'traces', 'SourceMaps', 'Scripts',
         'GatherContext', 'URL'],
     };
   }
@@ -85,10 +85,10 @@ class DuplicatedJavascript extends ByteEfficiencyAudit {
 
       const normalizedSource = 'node_modules/' + DuplicatedJavascript._getNodeModuleName(source);
       const aggregatedSourceDatas = groupedDuplication.get(normalizedSource) || [];
-      for (const {scriptUrl, resourceSize} of sourceDatas) {
-        let sourceData = aggregatedSourceDatas.find(d => d.scriptUrl === scriptUrl);
+      for (const {scriptId, scriptUrl, resourceSize} of sourceDatas) {
+        let sourceData = aggregatedSourceDatas.find(d => d.scriptId === scriptId);
         if (!sourceData) {
-          sourceData = {scriptUrl, resourceSize: 0};
+          sourceData = {scriptId, scriptUrl, resourceSize: 0};
           aggregatedSourceDatas.push(sourceData);
         }
         sourceData.resourceSize += resourceSize;
@@ -130,7 +130,6 @@ class DuplicatedJavascript extends ByteEfficiencyAudit {
       context.options?.ignoreThresholdInBytes || IGNORE_THRESHOLD_IN_BYTES;
     const duplication =
       await DuplicatedJavascript._getDuplicationGroupedByNodeModules(artifacts, context);
-    const mainDocumentRecord = NetworkAnalyzer.findOptionalMainDocument(networkRecords);
 
     /** @type {Map<string, number>} */
     const transferRatioByUrl = new Map();
@@ -157,22 +156,21 @@ class DuplicatedJavascript extends ByteEfficiencyAudit {
       let wastedBytesTotal = 0;
       for (let i = 0; i < sourceDatas.length; i++) {
         const sourceData = sourceDatas[i];
-        const url = sourceData.scriptUrl;
+        const scriptId = sourceData.scriptId;
+        const script = artifacts.Scripts.find(script => script.scriptId === scriptId);
+        const url = script?.url || '';
 
         /** @type {number|undefined} */
         let transferRatio = transferRatioByUrl.get(url);
         if (transferRatio === undefined) {
-          const networkRecord = url === artifacts.URL.finalUrl ?
-            mainDocumentRecord :
-            networkRecords.find(n => n.url === url);
+          const networkRecord = getRequestForScript(networkRecords, script);
 
-          const script = artifacts.ScriptElements.find(script => script.src === url);
-          if (!script || script.content === null) {
+          if (!script || script.length === undefined) {
             // This should never happen because we found the wasted bytes from bundles, which required contents in a ScriptElement.
             continue;
           }
 
-          const contentLength = script.content.length;
+          const contentLength = script.length;
           transferRatio = DuplicatedJavascript._estimateTransferRatio(networkRecord, contentLength);
           transferRatioByUrl.set(url, transferRatio);
         }

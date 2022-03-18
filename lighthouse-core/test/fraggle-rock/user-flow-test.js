@@ -7,33 +7,64 @@
 
 /* eslint-env jest */
 
-const snapshotModule = {snapshot: jest.fn()};
+const {createMockPage, mockRunnerModule} = require('./gather/mock-driver.js');
+
+const snapshotModule = {snapshotGather: jest.fn()};
 jest.mock('../../fraggle-rock/gather/snapshot-runner.js', () => snapshotModule);
-const navigationModule = {navigation: jest.fn()};
+const navigationModule = {navigationGather: jest.fn()};
 jest.mock('../../fraggle-rock/gather/navigation-runner.js', () => navigationModule);
-const timespanModule = {startTimespan: jest.fn()};
+const timespanModule = {startTimespanGather: jest.fn()};
 jest.mock('../../fraggle-rock/gather/timespan-runner.js', () => timespanModule);
 
-const {createMockPage} = require('./gather/mock-driver.js');
-const UserFlow = require('../../fraggle-rock/user-flow.js');
+const mockRunner = mockRunnerModule();
+
+const {UserFlow, auditGatherSteps} = require('../../fraggle-rock/user-flow.js');
 
 describe('UserFlow', () => {
   let mockPage = createMockPage();
 
   beforeEach(() => {
     mockPage = createMockPage();
-    const lhr = {finalUrl: 'https://www.example.com'};
 
-    snapshotModule.snapshot.mockReset();
-    snapshotModule.snapshot.mockResolvedValue({lhr: {...lhr, gatherMode: 'snapshot'}});
+    mockRunner.reset();
 
-    navigationModule.navigation.mockReset();
-    navigationModule.navigation.mockResolvedValue({lhr: {...lhr, gatherMode: 'navigation'}});
+    snapshotModule.snapshotGather.mockReset();
+    snapshotModule.snapshotGather.mockResolvedValue({
+      artifacts: {
+        URL: {finalUrl: 'https://www.example.com'},
+        GatherContext: {gatherMode: 'snapshot'},
+      },
+      runnerOptions: {
+        config: {},
+        computedCache: new Map(),
+      },
+    });
 
-    const timespanLhr = {...lhr, gatherMode: 'timespan'};
-    const timespan = {endTimespan: jest.fn().mockResolvedValue({lhr: timespanLhr})};
-    timespanModule.startTimespan.mockReset();
-    timespanModule.startTimespan.mockResolvedValue(timespan);
+    navigationModule.navigationGather.mockReset();
+    navigationModule.navigationGather.mockResolvedValue({
+      artifacts: {
+        URL: {finalUrl: 'https://www.example.com'},
+        GatherContext: {gatherMode: 'navigation'},
+      },
+      runnerOptions: {
+        config: {},
+        computedCache: new Map(),
+      },
+    });
+
+    const timespanGatherResult = {
+      artifacts: {
+        URL: {finalUrl: 'https://www.example.com'},
+        GatherContext: {gatherMode: 'timespan'},
+      },
+      runnerOptions: {
+        config: {},
+        computedCache: new Map(),
+      },
+    };
+    const timespan = {endTimespanGather: jest.fn().mockResolvedValue(timespanGatherResult)};
+    timespanModule.startTimespanGather.mockReset();
+    timespanModule.startTimespanGather.mockResolvedValue(timespan);
   });
 
   describe('.navigate()', () => {
@@ -53,11 +84,11 @@ describe('UserFlow', () => {
 
       await flow.navigate('https://example.com/3');
 
-      expect(navigationModule.navigation).toHaveBeenCalledTimes(3);
-      expect(flow.steps).toMatchObject([
-        {name: 'My Step', lhr: {finalUrl: 'https://www.example.com'}},
-        {name: 'Navigation report (www.example.com/)', lhr: {finalUrl: 'https://www.example.com'}},
-        {name: 'Navigation report (www.example.com/)', lhr: {finalUrl: 'https://www.example.com'}},
+      expect(navigationModule.navigationGather).toHaveBeenCalledTimes(3);
+      expect(flow._gatherSteps).toMatchObject([
+        {name: 'My Step'},
+        {name: 'Navigation report (www.example.com/)'},
+        {name: 'Navigation report (www.example.com/)'},
       ]);
     });
 
@@ -77,8 +108,9 @@ describe('UserFlow', () => {
       await flow.navigate('https://example.com/4', {configContext: configContextExplicit});
 
       // Check that we have the property set.
-      expect(navigationModule.navigation).toHaveBeenCalledTimes(4);
-      const [[, call1], [, call2], [, call3], [, call4]] = navigationModule.navigation.mock.calls;
+      expect(navigationModule.navigationGather).toHaveBeenCalledTimes(4);
+      const [[, call1], [, call2], [, call3], [, call4]] =
+        navigationModule.navigationGather.mock.calls;
       expect(call1).not.toHaveProperty('configContext.settingsOverrides.disableStorageReset');
       expect(call2).toHaveProperty('configContext.settingsOverrides.disableStorageReset');
       expect(call3).toHaveProperty('configContext.settingsOverrides.disableStorageReset');
@@ -105,8 +137,8 @@ describe('UserFlow', () => {
       await flow.navigate('https://example.com/3', {configContext: configContextExplicit});
 
       // Check that we have the property set.
-      expect(navigationModule.navigation).toHaveBeenCalledTimes(3);
-      const [[, call1], [, call2], [, call3]] = navigationModule.navigation.mock.calls;
+      expect(navigationModule.navigationGather).toHaveBeenCalledTimes(3);
+      const [[, call1], [, call2], [, call3]] = navigationModule.navigationGather.mock.calls;
       expect(call1).toHaveProperty('configContext.skipAboutBlank');
       expect(call2).toHaveProperty('configContext.skipAboutBlank');
       expect(call3).toHaveProperty('configContext.skipAboutBlank');
@@ -136,10 +168,10 @@ describe('UserFlow', () => {
       await flow.startTimespan();
       await flow.endTimespan();
 
-      expect(timespanModule.startTimespan).toHaveBeenCalledTimes(2);
-      expect(flow.steps).toMatchObject([
-        {name: 'My Timespan', lhr: {finalUrl: 'https://www.example.com'}},
-        {name: 'Timespan report (www.example.com/)', lhr: {finalUrl: 'https://www.example.com'}},
+      expect(timespanModule.startTimespanGather).toHaveBeenCalledTimes(2);
+      expect(flow._gatherSteps).toMatchObject([
+        {name: 'My Timespan'},
+        {name: 'Timespan report (www.example.com/)'},
       ]);
     });
   });
@@ -164,11 +196,183 @@ describe('UserFlow', () => {
       await flow.snapshot({stepName: 'My Snapshot'});
       await flow.snapshot();
 
-      expect(snapshotModule.snapshot).toHaveBeenCalledTimes(2);
-      expect(flow.steps).toMatchObject([
-        {name: 'My Snapshot', lhr: {finalUrl: 'https://www.example.com'}},
-        {name: 'Snapshot report (www.example.com/)', lhr: {finalUrl: 'https://www.example.com'}},
+      expect(snapshotModule.snapshotGather).toHaveBeenCalledTimes(2);
+      expect(flow._gatherSteps).toMatchObject([
+        {name: 'My Snapshot'},
+        {name: 'Snapshot report (www.example.com/)'},
       ]);
     });
   });
+
+  describe('.getFlowResult', () => {
+    it('should throw if no flow steps have been run', async () => {
+      const flow = new UserFlow(mockPage.asPage());
+      const flowResultPromise = flow.createFlowResult();
+      await expect(flowResultPromise).rejects.toThrow(/Need at least one step/);
+    });
+
+    it('should audit active gather steps', async () => {
+      mockRunner.audit.mockImplementation(artifacts => ({
+        lhr: {
+          finalUrl: artifacts.URL.finalUrl,
+          gatherMode: artifacts.GatherContext.gatherMode,
+        },
+      }));
+      const flow = new UserFlow(mockPage.asPage());
+
+      await flow.navigate('https://www.example.com/');
+      await flow.startTimespan({stepName: 'My Timespan'});
+      await flow.endTimespan();
+      await flow.snapshot({stepName: 'My Snapshot'});
+
+      const flowResult = await flow.createFlowResult();
+      expect(flowResult).toMatchObject({
+        steps: [
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'navigation'},
+            name: 'Navigation report (www.example.com/)',
+          },
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'timespan'},
+            name: 'My Timespan',
+          },
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'snapshot'},
+            name: 'My Snapshot',
+          },
+        ],
+        name: 'User flow (www.example.com)',
+      });
+    });
+  });
+
+  describe('auditGatherSteps', () => {
+    it('should audit gather steps', async () => {
+      const runnerActual = jest.requireActual('../../runner.js');
+      mockRunner.getGathererList.mockImplementation(runnerActual.getGathererList);
+      mockRunner.getAuditList.mockImplementation(runnerActual.getAuditList);
+      mockRunner.audit.mockImplementation(artifacts => ({
+        lhr: {
+          finalUrl: artifacts.URL.finalUrl,
+          gatherMode: artifacts.GatherContext.gatherMode,
+        },
+      }));
+
+      /** @type {LH.Config.Json} */
+      const flowConfig = {
+        extends: 'lighthouse:default',
+        settings: {
+          skipAudits: ['uses-http2'],
+        },
+      };
+
+      /** @type {LH.Config.Json} */
+      const timespanConfig = {
+        extends: 'lighthouse:default',
+        settings: {
+          onlyCategories: ['performance'],
+        },
+      };
+
+      /** @type {LH.Config.FRContext} */
+      const snapshotContext = {
+        settingsOverrides: {
+          onlyCategories: ['accessibility'],
+        },
+      };
+
+      /** @type {LH.UserFlow.GatherStep[]} */
+      const gatherSteps = [
+        {
+          name: 'Navigation',
+          // @ts-expect-error Only these artifacts are used by the test.
+          artifacts: {
+            URL: {
+              requestedUrl: 'https://www.example.com',
+              finalUrl: 'https://www.example.com',
+            },
+            GatherContext: {gatherMode: 'navigation'},
+          },
+        },
+        {
+          name: 'Timespan',
+          // @ts-expect-error Only these artifacts are used by the test.
+          artifacts: {
+            URL: {
+              requestedUrl: 'https://www.example.com',
+              finalUrl: 'https://www.example.com',
+            },
+            GatherContext: {gatherMode: 'timespan'},
+          },
+          config: timespanConfig,
+        },
+        {
+          name: 'Snapshot',
+          // @ts-expect-error Only these artifacts are used by the test.
+          artifacts: {
+            URL: {
+              requestedUrl: 'https://www.example.com',
+              finalUrl: 'https://www.example.com',
+            },
+            GatherContext: {gatherMode: 'snapshot'},
+          },
+          configContext: snapshotContext,
+        },
+      ];
+
+      const flowResult = await auditGatherSteps(gatherSteps, {config: flowConfig});
+
+      expect(mockRunner.audit.mock.calls).toMatchObject([
+        [
+          gatherSteps[0].artifacts,
+          {
+            config: {
+              settings: {
+                skipAudits: ['uses-http2'],
+              },
+            },
+          },
+        ],
+        [
+          gatherSteps[1].artifacts,
+          {
+            config: {
+              settings: {
+                onlyCategories: ['performance'],
+              },
+            },
+          },
+        ],
+        [
+          gatherSteps[2].artifacts,
+          {
+            config: {
+              settings: {
+                onlyCategories: ['accessibility'],
+              },
+            },
+          },
+        ],
+      ]);
+
+      expect(flowResult).toMatchObject({
+        steps: [
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'navigation'},
+            name: 'Navigation',
+          },
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'timespan'},
+            name: 'Timespan',
+          },
+          {
+            lhr: {finalUrl: 'https://www.example.com', gatherMode: 'snapshot'},
+            name: 'Snapshot',
+          },
+        ],
+        name: 'User flow (www.example.com)',
+      });
+    });
+  });
 });
+

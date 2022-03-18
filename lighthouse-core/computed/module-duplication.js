@@ -43,7 +43,7 @@ class ModuleDuplication {
   }
 
   /**
-   * @param {Map<string, Array<{scriptUrl: string, resourceSize: number}>>} moduleNameToSourceData
+   * @param {Map<string, Array<{scriptId: string, resourceSize: number}>>} moduleNameToSourceData
    */
   static _normalizeAggregatedData(moduleNameToSourceData) {
     for (const [key, originalSourceData] of moduleNameToSourceData.entries()) {
@@ -74,7 +74,7 @@ class ModuleDuplication {
   }
 
   /**
-   * @param {Pick<LH.Artifacts, 'ScriptElements'|'SourceMaps'>} artifacts
+   * @param {Pick<LH.Artifacts, 'Scripts'|'SourceMaps'>} artifacts
    * @param {LH.Artifacts.ComputedContext} context
    */
   static async compute_(artifacts, context) {
@@ -109,7 +109,7 @@ class ModuleDuplication {
       }
     }
 
-    /** @type {Map<string, Array<{scriptUrl: string, resourceSize: number}>>} */
+    /** @type {Map<string, Array<{scriptId: string, scriptUrl: string, resourceSize: number}>>} */
     const moduleNameToSourceData = new Map();
     for (const {rawMap, script} of bundles) {
       const sourceDataArray = sourceDatasMap.get(rawMap);
@@ -122,7 +122,8 @@ class ModuleDuplication {
           moduleNameToSourceData.set(sourceData.source, data);
         }
         data.push({
-          scriptUrl: script.src || '',
+          scriptId: script.scriptId,
+          scriptUrl: script.url,
           resourceSize: sourceData.resourceSize,
         });
       }
@@ -133,4 +134,4 @@ class ModuleDuplication {
   }
 }
 
-module.exports = makeComputedArtifact(ModuleDuplication, ['ScriptElements', 'SourceMaps']);
+module.exports = makeComputedArtifact(ModuleDuplication, ['Scripts', 'SourceMaps']);

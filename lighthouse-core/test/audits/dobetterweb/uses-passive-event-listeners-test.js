@@ -24,7 +24,7 @@ describe('Page uses passive events listeners where applicable', () => {
         {source: 'deprecation', url: 'https://example.com/two'},
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
 
     assert.equal(auditResult.score, 0);
@@ -36,7 +36,7 @@ describe('Page uses passive events listeners where applicable', () => {
     const auditResult = await PassiveEventsAudit.audit({
       ConsoleMessages: [],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);

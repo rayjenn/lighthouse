@@ -40,7 +40,7 @@ class ErrorLogs extends Audit {
       title: str_(UIStrings.title),
       failureTitle: str_(UIStrings.failureTitle),
       description: str_(UIStrings.description),
-      requiredArtifacts: ['ConsoleMessages', 'SourceMaps', 'ScriptElements'],
+      requiredArtifacts: ['ConsoleMessages', 'SourceMaps', 'Scripts'],
     };
   }
 
@@ -87,7 +87,7 @@ class ErrorLogs extends Audit {
     const consoleRows = artifacts.ConsoleMessages
       .filter(item => item.level === 'error')
       .map(item => {
-        const bundle = bundles.find(bundle => bundle.script.src === item.url);
+        const bundle = bundles.find(bundle => bundle.script.scriptId === item.scriptId);
         return {
           source: item.source,
           description: item.text,

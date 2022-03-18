@@ -724,7 +724,7 @@ Object {
           "weight": 0,
         },
       ],
-      "description": "These checks highlight opportunities to [improve the accessibility of your web app](https://developers.google.com/web/fundamentals/accessibility). Only a subset of accessibility issues can be automatically detected so manual testing is also encouraged.",
+      "description": "These checks highlight opportunities to [improve the accessibility of your web app](https://web.dev/lighthouse-accessibility/). Only a subset of accessibility issues can be automatically detected so manual testing is also encouraged.",
       "manualDescription": "These items address areas which an automated testing tool cannot cover. Learn more in our guide on [conducting an accessibility review](https://developers.google.com/web/fundamentals/accessibility/how-to-review).",
       "supportedModes": Array [
         "navigation",
@@ -1403,6 +1403,9 @@ Object {
         },
         Object {
           "path": "script-elements",
+        },
+        Object {
+          "path": "scripts",
         },
         Object {
           "path": "iframe-elements",

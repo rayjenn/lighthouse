@@ -46,7 +46,8 @@ async function renderLHReport() {
 
       const reportRootEl = lighthouseRenderer.renderReport(lhr, {
         omitTopbar: true,
-        disableAutoDarkModeAndFireworks: true,
+        disableFireworks: true,
+        disableDarkMode: true,
       });
       // TODO: display warnings if appropriate.
       for (const el of reportRootEl.querySelectorAll('.lh-warnings--toplevel')) {

@@ -12,14 +12,15 @@ const SDK = require('../lib/cdt/SDK.js');
 /**
  * Calculate the number of bytes contributed by each source file
  * @param {LH.Artifacts.Bundle['map']} map
+ * @param {number} contentLength
  * @param {string} content
  * @return {LH.Artifacts.Bundle['sizes']}
  */
-function computeGeneratedFileSizes(map, content) {
+function computeGeneratedFileSizes(map, contentLength, content) {
   const lines = content.split('\n');
   /** @type {Record<string, number>} */
   const files = {};
-  const totalBytes = content.length;
+  const totalBytes = contentLength;
   let unmappedBytes = totalBytes;
 
   // @ts-expect-error: This function is added in SDK.js. This will eventually be added to CDT.
@@ -78,10 +79,10 @@ function computeGeneratedFileSizes(map, content) {
 
 class JSBundles {
   /**
-   * @param {Pick<LH.Artifacts, 'SourceMaps'|'ScriptElements'>} artifacts
+   * @param {Pick<LH.Artifacts, 'SourceMaps'|'Scripts'>} artifacts
    */
   static async compute_(artifacts) {
-    const {SourceMaps, ScriptElements} = artifacts;
+    const {SourceMaps, Scripts} = artifacts;
 
     /** @type {LH.Artifacts.Bundle[]} */
     const bundles = [];
@@ -89,23 +90,22 @@ class JSBundles {
     // Collate map and script, compute file sizes.
     for (const SourceMap of SourceMaps) {
       if (!SourceMap.map) continue;
-      const {scriptUrl, map: rawMap} = SourceMap;
+      const {scriptId, map: rawMap} = SourceMap;
 
       if (!rawMap.mappings) continue;
 
-      const scriptElement = ScriptElements.find(s => s.src === scriptUrl);
-      if (!scriptElement) continue;
+      const script = Scripts.find(s => s.scriptId === scriptId);
+      if (!script) continue;
 
       const compiledUrl = SourceMap.scriptUrl || 'compiled.js';
       const mapUrl = SourceMap.sourceMapUrl || 'compiled.js.map';
       const map = new SDK.TextSourceMap(compiledUrl, mapUrl, rawMap);
 
-      const content = scriptElement?.content ? scriptElement.content : '';
-      const sizes = computeGeneratedFileSizes(map, content);
+      const sizes = computeGeneratedFileSizes(map, script.length || 0, script.content || '');
 
       const bundle = {
         rawMap,
-        script: scriptElement,
+        script,
         map,
         sizes,
       };
@@ -116,4 +116,4 @@ class JSBundles {
   }
 }
 
-module.exports = makeComputedArtifact(JSBundles, ['ScriptElements', 'SourceMaps']);
+module.exports = makeComputedArtifact(JSBundles, ['Scripts', 'SourceMaps']);

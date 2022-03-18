@@ -18,20 +18,8 @@ class JsUsage extends FRGatherer {
 
   constructor() {
     super();
-    /** @type {LH.Crdp.Debugger.ScriptParsedEvent[]} */
-    this._scriptParsedEvents = [];
     /** @type {LH.Crdp.Profiler.ScriptCoverage[]} */
     this._scriptUsages = [];
-    this.onScriptParsed = this.onScriptParsed.bind(this);
-  }
-
-  /**
-   * @param {LH.Crdp.Debugger.ScriptParsedEvent} event
-   */
-  onScriptParsed(event) {
-    if (event.embedderName) {
-      this._scriptParsedEvents.push(event);
-    }
   }
 
   /**
@@ -55,90 +43,26 @@ class JsUsage extends FRGatherer {
   }
 
   /**
-   * @param {LH.Gatherer.FRTransitionalContext} context
-   */
-  async startSensitiveInstrumentation(context) {
-    const session = context.driver.defaultSession;
-    session.on('Debugger.scriptParsed', this.onScriptParsed);
-    await session.sendCommand('Debugger.enable');
-  }
-
-  /**
-   * @param {LH.Gatherer.FRTransitionalContext} context
-   */
-  async stopSensitiveInstrumentation(context) {
-    const session = context.driver.defaultSession;
-    await session.sendCommand('Debugger.disable');
-    session.off('Debugger.scriptParsed', this.onScriptParsed);
-  }
-
-  /**
-   * Usages alone do not always generate an exhaustive list of scripts in timespan and snapshot.
-   * For audits which use this for url/scriptId mappings, we can include an empty usage object.
-   *
-   * @param {Record<string, Array<LH.Crdp.Profiler.ScriptCoverage>>} usageByUrl
-   */
-  _addMissingScriptIds(usageByUrl) {
-    for (const scriptParsedEvent of this._scriptParsedEvents) {
-      const url = scriptParsedEvent.embedderName;
-      if (!url) continue;
-
-      const scripts = usageByUrl[url] || [];
-      if (!scripts.find(s => s.scriptId === scriptParsedEvent.scriptId)) {
-        scripts.push({
-          url,
-          scriptId: scriptParsedEvent.scriptId,
-          functions: [],
-        });
-      }
-      usageByUrl[url] = scripts;
-    }
-  }
-
-  /**
-   * @param {LH.Gatherer.FRTransitionalContext} context
    * @return {Promise<LH.Artifacts['JsUsage']>}
    */
-  async getArtifact(context) {
-    /** @type {Record<string, Array<LH.Crdp.Profiler.ScriptCoverage>>} */
-    const usageByUrl = {};
-
-    // Force `Debugger.scriptParsed` events for url to scriptId mappings in snapshot mode.
-    if (context.gatherMode === 'snapshot') {
-      await this.startSensitiveInstrumentation(context);
-      await this.stopSensitiveInstrumentation(context);
-    }
+  async getArtifact() {
+    /** @type {Record<string, LH.Crdp.Profiler.ScriptCoverage>} */
+    const usageByScriptId = {};
 
     for (const scriptUsage of this._scriptUsages) {
-      // `ScriptCoverage.url` can be overridden by a magic sourceURL comment.
-      // Get the associated ScriptParsedEvent and use embedderName, which is the original url.
-      // See https://chromium-review.googlesource.com/c/v8/v8/+/2317310
-      let url = scriptUsage.url;
-      const scriptParsedEvent =
-        this._scriptParsedEvents.find(e => e.scriptId === scriptUsage.scriptId);
-      if (scriptParsedEvent?.embedderName) {
-        url = scriptParsedEvent.embedderName;
-      }
-
       // If `url` is blank, that means the script was anonymous (eval, new Function, onload, ...).
       // Or, it's because it was code Lighthouse over the protocol via `Runtime.evaluate`.
       // We currently don't consider coverage of anonymous scripts, and we definitely don't want
       // coverage of code Lighthouse ran to inspect the page, so we ignore this ScriptCoverage if
       // url is blank.
-      if (scriptUsage.url === '' || (scriptParsedEvent && scriptParsedEvent.embedderName === '')) {
+      if (scriptUsage.url === '') {
         continue;
       }
 
-      const scripts = usageByUrl[url] || [];
-      scripts.push(scriptUsage);
-      usageByUrl[url] = scripts;
+      usageByScriptId[scriptUsage.scriptId] = scriptUsage;
     }
 
-    if (context.gatherMode !== 'navigation') {
-      this._addMissingScriptIds(usageByUrl);
-    }
-
-    return usageByUrl;
+    return usageByScriptId;
   }
 }
 

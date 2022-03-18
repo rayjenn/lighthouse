@@ -17,10 +17,11 @@ const artifactPath = 'lighthouse-core/test/results/artifacts';
 const MAGIC_SERVER_PORT = 10200;
 
 /**
- * Update the report artifacts. If artifactName is set, only that artifact will be updated.
- * @param {keyof LH.Artifacts=} artifactName
+ * Update the report artifacts.
+ * If artifactNames is nonempty, only those artifacts will be updated.
+ * @param {Array<keyof LH.Artifacts>} artifactNames
  */
-async function update(artifactName) {
+async function update(artifactNames) {
   await server.listen(MAGIC_SERVER_PORT, 'localhost');
 
   const oldArtifacts = assetSaver.loadArtifacts(artifactPath);
@@ -34,31 +35,27 @@ async function update(artifactName) {
   await cli.runLighthouse(url, flags, budgetedConfig);
   await server.close();
 
-  let newArtifacts = assetSaver.loadArtifacts(artifactPath);
+  const newArtifacts = assetSaver.loadArtifacts(artifactPath);
 
-  // Normalize some data so it doesn't change on every update.
-  let baseTime = 0;
-  for (const timing of newArtifacts.Timing) {
-    // @ts-expect-error: Value actually is writeable at this point.
-    timing.startTime = baseTime++;
-    // @ts-expect-error: Value actually is writeable at this point.
-    timing.duration = 1;
+  assetSaver.normalizeTimingEntries(newArtifacts.Timing);
+
+  if (artifactNames.length === 0) {
+    await assetSaver.saveArtifacts(newArtifacts, artifactPath);
+    return;
   }
 
-  if (artifactName) {
-    // Revert everything except the one artifact
+  // Revert everything except these artifacts.
+  const artifactsToKeep = {...oldArtifacts};
+  for (const artifactName of artifactNames) {
     if (!(artifactName in newArtifacts) && !(artifactName in oldArtifacts)) {
       throw Error('Unknown artifact name: ' + artifactName);
     }
 
-    const newArtifactToKeep = newArtifacts[artifactName];
-
-    newArtifacts = oldArtifacts;
     // @ts-expect-error tsc can't yet express that artifactName is only a single type in each iteration, not a union of types.
-    newArtifacts[artifactName] = newArtifactToKeep;
+    artifactsToKeep[artifactName] = newArtifacts[artifactName];
   }
 
-  await assetSaver.saveArtifacts(newArtifacts, artifactPath);
+  await assetSaver.saveArtifacts(artifactsToKeep, artifactPath);
 }
 
-update(/** @type {keyof LH.Artifacts | undefined} */ (process.argv[2]));
+update(/** @type {Array<keyof LH.Artifacts>} */ (process.argv.slice(2)));

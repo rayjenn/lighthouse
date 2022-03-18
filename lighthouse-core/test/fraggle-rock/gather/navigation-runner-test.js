@@ -527,9 +527,8 @@ describe('NavigationRunner', () => {
     it('should throw on invalid URL', async () => {
       const runnerActual = jest.requireActual('../../../runner.js');
       mockRunner.gather.mockImplementation(runnerActual.gather);
-      mockRunner.audit.mockImplementation(runnerActual.audit);
 
-      const navigatePromise = runner.navigation(
+      const navigatePromise = runner.navigationGather(
         '',
         {page: mockDriver._page.asPage()}
       );
@@ -545,7 +544,7 @@ describe('NavigationRunner', () => {
       };
 
       const configContext = {settingsOverrides};
-      await runner.navigation(
+      await runner.navigationGather(
         'http://example.com',
         {
           page: mockDriver._page.asPage(),

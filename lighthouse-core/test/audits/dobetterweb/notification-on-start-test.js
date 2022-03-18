@@ -22,7 +22,7 @@ describe('UX: notification audit', () => {
         {source: 'deprecation', url: 'https://example.com/two'},
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     assert.equal(auditResult.details.items.length, 2);
@@ -33,7 +33,7 @@ describe('UX: notification audit', () => {
     const auditResult = await NotificationOnStart.audit({
       ConsoleMessages: [],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);

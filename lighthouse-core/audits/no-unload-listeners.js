@@ -30,7 +30,7 @@ class NoUnloadListeners extends Audit {
       title: str_(UIStrings.title),
       failureTitle: str_(UIStrings.failureTitle),
       description: str_(UIStrings.description),
-      requiredArtifacts: ['GlobalListeners', 'JsUsage', 'SourceMaps', 'ScriptElements'],
+      requiredArtifacts: ['GlobalListeners', 'SourceMaps', 'Scripts'],
     };
   }
 
@@ -54,33 +54,25 @@ class NoUnloadListeners extends Audit {
       {key: 'source', itemType: 'source-location', text: str_(i18n.UIStrings.columnSource)},
     ];
 
-    // Look up scriptId to script URL via the JsUsage artifact.
-    /** @type {Map<string, string>} */
-    const scriptIdToUrl = new Map();
-    for (const [url, usages] of Object.entries(artifacts.JsUsage)) {
-      for (const usage of usages) {
-        scriptIdToUrl.set(usage.scriptId, url);
-      }
-    }
-
     /** @type {Array<{source: LH.Audit.Details.ItemValue}>} */
     const tableItems = unloadListeners.map(listener => {
-      const url = scriptIdToUrl.get(listener.scriptId);
+      const {lineNumber, columnNumber} = listener;
+      const script = artifacts.Scripts.find(s => s.scriptId === listener.scriptId);
 
       // If we can't find a url, still show something so the user can manually
       // look for where an `unload` handler is being created.
-      if (!url) {
+      if (!script) {
         return {
           source: {
             type: 'url',
-            value: '(unknown)',
+            value: `(unknown):${lineNumber}:${columnNumber}`,
           },
         };
       }
 
-      const bundle = bundles.find(bundle => bundle.script.src === url);
+      const bundle = bundles.find(bundle => bundle.script.scriptId === script.scriptId);
       return {
-        source: Audit.makeSourceLocation(url, listener.lineNumber, listener.columnNumber, bundle),
+        source: Audit.makeSourceLocation(script.url, lineNumber, columnNumber, bundle),
       };
     });
 

@@ -16,14 +16,14 @@ const makeComputedArtifact = require('./computed-artifact.js');
 
 /**
  * @typedef ComputeInput
- * @property {string} url
- * @property {Array<Omit<LH.Crdp.Profiler.ScriptCoverage, 'url'>>} scriptCoverages
+ * @property {string} scriptId
+ * @property {Omit<LH.Crdp.Profiler.ScriptCoverage, 'url'>} scriptCoverage
  * @property {LH.Artifacts.Bundle=} bundle
  */
 
 /**
  * @typedef Summary
- * @property {string} url
+ * @property {string} scriptId
  * @property {number} wastedBytes
  * @property {number} totalBytes
  * @property {number} wastedBytes
@@ -68,43 +68,24 @@ class UnusedJavascriptSummary {
   }
 
   /**
-   * @param {string} url
-   * @param {ReturnType<typeof UnusedJavascriptSummary.determineLengths>} lengths
+   * @param {string} scriptId
+   * @param {WasteData} wasteData
    * @return {Summary}
    */
-  static createItem(url, lengths) {
-    const wastedRatio = (lengths.unused / lengths.content) || 0;
-    const wastedBytes = Math.round(lengths.content * wastedRatio);
+  static createItem(scriptId, wasteData) {
+    const wastedRatio = (wasteData.unusedLength / wasteData.contentLength) || 0;
+    const wastedBytes = Math.round(wasteData.contentLength * wastedRatio);
 
     return {
-      url,
-      totalBytes: lengths.content,
+      scriptId,
+      totalBytes: wasteData.contentLength,
       wastedBytes,
       wastedPercent: 100 * wastedRatio,
     };
   }
 
   /**
-   * @param {WasteData[]} wasteData
-   */
-  static determineLengths(wasteData) {
-    let unused = 0;
-    let content = 0;
-    // TODO: this is right for multiple script tags in an HTML document,
-    // but may be wrong for multiple frames using the same script resource.
-    for (const usage of wasteData) {
-      unused += usage.unusedLength;
-      content += usage.contentLength;
-    }
-
-    return {
-      content,
-      unused,
-    };
-  }
-
-  /**
-   * @param {WasteData[]} wasteData
+   * @param {WasteData} wasteData
    * @param {LH.Artifacts.Bundle} bundle
    */
   static createSourceWastedBytes(wasteData, bundle) {
@@ -131,7 +112,7 @@ class UnusedJavascriptSummary {
         mapping.lastColumnNumber - 1 :
         lineLengths[mapping.lineNumber];
       for (let i = mapping.columnNumber; i <= lastColumnOfMapping; i++) {
-        if (wasteData.every(data => data.unusedByIndex[offset] === 1)) {
+        if (wasteData.unusedByIndex[offset] === 1) {
           const key = mapping.sourceURL || '(unmapped)';
           files[key] = (files[key] || 0) + 1;
         }
@@ -155,11 +136,10 @@ class UnusedJavascriptSummary {
    * @return {Promise<Summary>}
    */
   static async compute_(data) {
-    const {url, scriptCoverages, bundle} = data;
+    const {scriptId, scriptCoverage, bundle} = data;
 
-    const wasteData = scriptCoverages.map(UnusedJavascriptSummary.computeWaste);
-    const lengths = UnusedJavascriptSummary.determineLengths(wasteData);
-    const item = UnusedJavascriptSummary.createItem(url, lengths);
+    const wasteData = UnusedJavascriptSummary.computeWaste(scriptCoverage);
+    const item = UnusedJavascriptSummary.createItem(scriptId, wasteData);
     if (!bundle) return item;
 
     return {
@@ -171,5 +151,5 @@ class UnusedJavascriptSummary {
 
 module.exports = makeComputedArtifact(
   UnusedJavascriptSummary,
-  ['bundle', 'scriptCoverages', 'url']
+  ['bundle', 'scriptCoverage', 'scriptId']
 );

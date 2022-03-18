@@ -139,7 +139,7 @@ function loadSourceMapAndUsageFixture(name) {
   /** @type {{url: string, ranges: Array<{start: number, end: number, count: number}>}} */
   const exportedUsage = JSON.parse(usageJson);
   const usage = {
-    scriptId: 'FakeId', // Not used.
+    scriptId: name,
     url: exportedUsage.url,
     functions: [
       {
@@ -272,6 +272,21 @@ function makeMocksForGatherRunner() {
   }));
 }
 
+/**
+ * @param {Partial<LH.Artifacts.Script>} script
+ * @return {LH.Artifacts.Script} script
+ */
+function createScript(script) {
+  if (!script.scriptId) throw new Error('Must include a scriptId');
+
+  // @ts-expect-error For testing purposes we assume the test set all valid properties.
+  return {
+    ...script,
+    length: script.content?.length ?? script.length,
+    name: script.name ?? script.url ?? '<no name>',
+  };
+}
+
 module.exports = {
   getProtoRoundTrip,
   loadSourceMapFixture,
@@ -281,5 +296,6 @@ module.exports = {
   createDecomposedPromise,
   flushAllTimersAndMicrotasks,
   makeMocksForGatherRunner,
+  createScript,
   ...mockCommands,
 };

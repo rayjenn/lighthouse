@@ -38,7 +38,7 @@ class GeolocationOnStart extends ViolationAudit {
       failureTitle: str_(UIStrings.failureTitle),
       description: str_(UIStrings.description),
       supportedModes: ['navigation'],
-      requiredArtifacts: ['ConsoleMessages', 'SourceMaps', 'ScriptElements'],
+      requiredArtifacts: ['ConsoleMessages', 'SourceMaps', 'Scripts'],
     };
   }
 

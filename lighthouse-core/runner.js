@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const isDeepEqual = require('lodash.isequal');
+const {isEqual: isDeepEqual} = require('lodash');
 const Driver = require('./gather/driver.js');
 const GatherRunner = require('./gather/gather-runner.js');
 const ReportScoring = require('./scoring.js');
@@ -149,7 +149,7 @@ class Runner {
       Sentry.captureBreadcrumb({
         message: 'Run started',
         category: 'lifecycle',
-        data: sentryContext?.extra,
+        data: sentryContext,
       });
 
       /** @type {LH.Artifacts} */

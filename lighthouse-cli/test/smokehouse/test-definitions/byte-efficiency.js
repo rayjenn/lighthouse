@@ -31,6 +31,7 @@ const config = {
       // unsized-images is not a byte-efficiency audit but can easily leverage the variety of images present in
       // byte-efficiency tests & thus makes sense to test together.
       'unsized-images',
+      'script-elements-test-audit',
     ],
     throttlingMethod: 'devtools',
   },
@@ -40,6 +41,7 @@ const config = {
       // Lower the threshold so we don't need huge resources to make a test.
       unusedThreshold: 2000,
     }},
+    'script-elements-test-audit',
   ],
 };
 
@@ -84,7 +86,6 @@ const expectations = {
         async: false,
         defer: false,
         source: 'body',
-        content: /shadowRoot/,
       },
       {
         type: null,
@@ -92,7 +93,6 @@ const expectations = {
         async: false,
         defer: false,
         source: 'body',
-        content: /generateInlineStyleWithSize/,
       },
       {
         type: null,
@@ -100,7 +100,6 @@ const expectations = {
         async: false,
         defer: false,
         source: 'body',
-        content: /Used block #1/,
       },
       {
         type: null,
@@ -108,7 +107,6 @@ const expectations = {
         async: false,
         defer: false,
         source: 'body',
-        content: /Unused block #1/,
       },
       {
         type: null,
@@ -118,23 +116,44 @@ const expectations = {
         source: 'body',
       },
     ],
-    JsUsage: {
-      // ScriptParsedEvent.embedderName wasn't added to the protocol until M86,
-      // and `some-custom-url.js` won't show without it.
-      // https://chromiumdash.appspot.com/commit/52ed57138d0b83e8afd9de25e60655c6ace7527c
-      '_minChromiumMilestone': 86,
-      'http://localhost:10200/byte-efficiency/tester.html': [
-        {url: 'http://localhost:10200/byte-efficiency/tester.html'},
-        {url: 'http://localhost:10200/byte-efficiency/tester.html'},
-        {url: 'http://localhost:10200/byte-efficiency/tester.html'},
-        {url: 'http://localhost:10200/byte-efficiency/tester.html'},
-        {url: '/some-custom-url.js'},
+    Scripts: {
+      _includes: [
+        {
+          url: 'http://localhost:10200/byte-efficiency/tester.html',
+          content: /generateInlineStyleWithSize/,
+        },
+        {
+          url: 'http://localhost:10200/byte-efficiency/tester.html',
+          content: /image-in-shadow-root/,
+        },
+        {
+          url: 'http://localhost:10200/byte-efficiency/tester.html',
+          content: /definitely-unused/,
+        },
+        {
+          url: 'http://localhost:10200/byte-efficiency/tester.html',
+          content: /Used block #1/,
+        },
+        {
+          name: '/some-custom-url.js',
+          url: 'http://localhost:10200/byte-efficiency/tester.html',
+          content: /Unused block #1/,
+        },
+        {
+          url: 'http://localhost:10200/byte-efficiency/script.js',
+        },
+        {
+          url: 'http://localhost:10200/byte-efficiency/bundle.js',
+        },
+        // This _does not_ appear because it's a fake
+        // resource (so the response is not served as JS content type).
+        // {
+        //   url: 'http://localhost:10200/byte-efficiency/delay-complete.js?delay=8000',
+        // },
       ],
-      'http://localhost:10200/byte-efficiency/script.js': [
-        {url: 'http://localhost:10200/byte-efficiency/script.js'},
-      ],
-      'http://localhost:10200/byte-efficiency/bundle.js': [
-        {url: 'http://localhost:10200/byte-efficiency/bundle.js'},
+      // Ensure the above is exhaustive (except for favicon, which won't be fetched in devtools/LR).
+      _excludes: [
+        {url: /^((?!favicon).)*$/s},
       ],
     },
   },
@@ -173,13 +192,14 @@ const expectations = {
               wastedPercent: '87 +/- 5',
             },
             {
-              url: 'inline: \n  function unusedFunction() {\n    // Un...',
+              // /some-custom-url.js,
+              url: 'http://localhost:10200/byte-efficiency/tester.html',
               wastedBytes: '6700 +/- 100',
               wastedPercent: '99.6 +/- 0.1',
             },
             {
               url: 'inline: \n  // Used block #1\n  // FILLER DATA JUS...',
-              wastedBytes: '6559 +/- 100',
+              wastedBytes: '6563 +/- 100',
               wastedPercent: 100,
             },
             {
@@ -216,9 +236,10 @@ const expectations = {
               wastedBytes: '22000 +/- 1000',
             },
             {
+              // /some-custom-url.js,
               url: 'http://localhost:10200/byte-efficiency/tester.html',
-              totalBytes: '15000 +/- 1000',
-              wastedBytes: '6500 +/- 1000',
+              totalBytes: '6700 +/- 500',
+              wastedBytes: '6600 +/- 500',
             },
             {
               url: 'http://localhost:10200/byte-efficiency/bundle.js',

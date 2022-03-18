@@ -101,6 +101,7 @@ class ConsoleMessages extends FRGatherer {
       stackTrace: event.exceptionDetails.stackTrace,
       timestamp: event.timestamp,
       url: event.exceptionDetails.url,
+      scriptId: event.exceptionDetails.scriptId,
       lineNumber: event.exceptionDetails.lineNumber,
       columnNumber: event.exceptionDetails.columnNumber,
     };
@@ -117,7 +118,7 @@ class ConsoleMessages extends FRGatherer {
 
     // JS events have a stack trace, which we use to get the column.
     // CSS/HTML events only expose a line number.
-    const {columnNumber} = event.entry.stackTrace?.callFrames[0] || {};
+    const firstStackFrame = event.entry.stackTrace?.callFrames[0];
 
     this._logEntries.push({
       eventType: 'protocolLog',
@@ -127,8 +128,9 @@ class ConsoleMessages extends FRGatherer {
       stackTrace,
       timestamp,
       url,
+      scriptId: firstStackFrame?.scriptId,
       lineNumber,
-      columnNumber,
+      columnNumber: firstStackFrame?.columnNumber,
     });
   }
 

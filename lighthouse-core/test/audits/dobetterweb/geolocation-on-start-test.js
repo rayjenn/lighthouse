@@ -23,7 +23,7 @@ describe('UX: geolocation audit', () => {
         {source: 'deprecation', url: 'https://example.com/two'},
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     assert.equal(auditResult.details.items.length, 2);
@@ -34,7 +34,7 @@ describe('UX: geolocation audit', () => {
     const auditResult = await GeolocationOnStartAudit.audit({
       ConsoleMessages: [],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);

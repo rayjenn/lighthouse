@@ -31,7 +31,7 @@ class ScriptTreemapDataAudit extends Audit {
       title: 'Script Treemap Data',
       description: 'Used for treemap app',
       requiredArtifacts:
-        ['traces', 'devtoolsLogs', 'SourceMaps', 'ScriptElements', 'JsUsage', 'URL'],
+        ['traces', 'devtoolsLogs', 'SourceMaps', 'Scripts', 'JsUsage', 'URL'],
     };
   }
 
@@ -167,11 +167,10 @@ class ScriptTreemapDataAudit extends Audit {
     const nodes = [];
 
     let inlineScriptLength = 0;
-    for (const scriptElement of artifacts.ScriptElements) {
-      // No src means script is inline.
-      // Combine these ScriptElements so that inline scripts show up as a single root node.
-      if (!scriptElement.src) {
-        inlineScriptLength += (scriptElement.content || '').length;
+    for (const script of artifacts.Scripts) {
+      // Combine so that inline scripts show up as a single root node.
+      if (script.url === artifacts.URL.finalUrl) {
+        inlineScriptLength += (script.content || '').length;
       }
     }
     if (inlineScriptLength) {
@@ -185,25 +184,28 @@ class ScriptTreemapDataAudit extends Audit {
     const bundles = await JsBundles.request(artifacts, context);
     const duplicationByPath = await ModuleDuplication.request(artifacts, context);
 
-    for (const scriptElement of artifacts.ScriptElements) {
-      if (!scriptElement.src) continue;
+    for (const script of artifacts.Scripts) {
+      if (script.url === artifacts.URL.finalUrl) continue; // Handled above.
 
-      const name = scriptElement.src;
-      const bundle = bundles.find(bundle => scriptElement.src === bundle.script.src);
-      const scriptCoverages = artifacts.JsUsage[scriptElement.src] || [];
-      if (!bundle && scriptCoverages.length === 0) {
+      const name = script.url;
+      const bundle = bundles.find(bundle => script.scriptId === bundle.script.scriptId);
+      const scriptCoverage = /** @type {Omit<LH.Crdp.Profiler.ScriptCoverage, "url"> | undefined} */
+        (artifacts.JsUsage[script.scriptId]);
+      if (!bundle && !scriptCoverage) {
         // No bundle and no coverage information, so simply make a single node
         // detailing how big the script is.
 
         nodes.push({
           name,
-          resourceBytes: scriptElement.src.length,
+          resourceBytes: script.length || 0,
         });
         continue;
       }
 
-      const unusedJavascriptSummary = await UnusedJavaScriptSummary.request(
-        {url: scriptElement.src, scriptCoverages, bundle}, context);
+      const unusedJavascriptSummary = scriptCoverage ?
+        await UnusedJavaScriptSummary.request(
+          {scriptId: script.scriptId, scriptCoverage, bundle}, context) :
+        undefined;
 
       /** @type {LH.Treemap.Node} */
       let node;
@@ -218,7 +220,7 @@ class ScriptTreemapDataAudit extends Audit {
             resourceBytes: bundle.sizes.files[source],
           };
 
-          if (unusedJavascriptSummary.sourcesWastedBytes) {
+          if (unusedJavascriptSummary?.sourcesWastedBytes) {
             sourceData.unusedBytes = unusedJavascriptSummary.sourcesWastedBytes[source];
           }
 
@@ -241,20 +243,19 @@ class ScriptTreemapDataAudit extends Audit {
           const sourceData = {
             resourceBytes: bundle.sizes.unmappedBytes,
           };
-          if (unusedJavascriptSummary.sourcesWastedBytes) {
+          if (unusedJavascriptSummary?.sourcesWastedBytes) {
             sourceData.unusedBytes = unusedJavascriptSummary.sourcesWastedBytes['(unmapped)'];
           }
           sourcesData['(unmapped)'] = sourceData;
         }
 
-        node = this.makeScriptNode(scriptElement.src, bundle.rawMap.sourceRoot || '', sourcesData);
+        node = this.makeScriptNode(script.url, bundle.rawMap.sourceRoot || '', sourcesData);
       } else {
         // No valid source map for this script, so we can only produce a single node.
-
         node = {
           name,
-          resourceBytes: unusedJavascriptSummary.totalBytes,
-          unusedBytes: unusedJavascriptSummary.wastedBytes,
+          resourceBytes: unusedJavascriptSummary?.totalBytes ?? script.length ?? 0,
+          unusedBytes: unusedJavascriptSummary?.wastedBytes,
         };
       }
 

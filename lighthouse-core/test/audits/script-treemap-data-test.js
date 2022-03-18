@@ -9,7 +9,7 @@
 
 const ScriptTreemapData_ = require('../../audits/script-treemap-data.js');
 const networkRecordsToDevtoolsLog = require('../network-records-to-devtools-log.js');
-const {loadSourceMapAndUsageFixture, loadSourceMapFixture, makeParamsOptional} =
+const {loadSourceMapAndUsageFixture, loadSourceMapFixture, makeParamsOptional, createScript} =
   require('../test-utils.js');
 
 const ScriptTreemapData = {
@@ -39,17 +39,20 @@ describe('ScriptTreemapData audit', () => {
       const networkRecords = [generateRecord(scriptUrl, content.length, 'Script')];
 
       // Add a script with no source map or usage.
-      const noSourceMapScript = {src: 'https://sqoosh.app/no-map-or-usage.js', content: '// hi'};
+      const noSourceMapScript = createScript({scriptId: '1', url: 'https://sqoosh.app/no-map-or-usage.js', content: '// hi'});
       networkRecords.push(
-        generateRecord(noSourceMapScript.src, noSourceMapScript.content.length, 'Script')
+        generateRecord(noSourceMapScript.url, noSourceMapScript.length || 0, 'Script')
       );
 
       const artifacts = {
         URL: {requestedUrl: mainUrl, finalUrl: mainUrl},
-        JsUsage: {[usage.url]: [usage]},
+        JsUsage: {[usage.scriptId]: usage},
         devtoolsLogs: {defaultPass: networkRecordsToDevtoolsLog(networkRecords)},
-        SourceMaps: [{scriptUrl: scriptUrl, map}],
-        ScriptElements: [{src: scriptUrl, content}, noSourceMapScript],
+        SourceMaps: [{scriptId: 'squoosh', scriptUrl, map}],
+        Scripts: [
+          {scriptId: 'squoosh', url: scriptUrl, content},
+          noSourceMapScript,
+        ].map(createScript),
       };
       const results = await ScriptTreemapData.audit(artifacts, context);
       if (!results.details || results.details.type !== 'treemap-data') {
@@ -60,11 +63,11 @@ describe('ScriptTreemapData audit', () => {
     });
 
     it('has nodes', () => {
-      expect(treemapData.nodes.find(s => s.name === 'https://sqoosh.app/no-map-or-usage.js'))
-        .toMatchInlineSnapshot(`
+      expect(treemapData.nodes.find((s) => s.name === 'https://sqoosh.app/no-map-or-usage.js')).
+        toMatchInlineSnapshot(`
         Object {
           "name": "https://sqoosh.app/no-map-or-usage.js",
-          "resourceBytes": 37,
+          "resourceBytes": 5,
         }
       `);
 
@@ -79,7 +82,7 @@ describe('ScriptTreemapData audit', () => {
         }
       `);
 
-      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`6674`);
+      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`6673`);
       expect(treemapData.nodes).toMatchSnapshot();
     });
   });
@@ -104,8 +107,14 @@ describe('ScriptTreemapData audit', () => {
         // Audit should still work even without usage data.
         JsUsage: {},
         devtoolsLogs: {defaultPass: networkRecordsToDevtoolsLog(networkRecords)},
-        SourceMaps: [{scriptUrl: scriptUrl1, map}, {scriptUrl: scriptUrl2, map}],
-        ScriptElements: [{src: scriptUrl1, content}, {src: scriptUrl2, content}],
+        SourceMaps: [
+          {scriptId: '1', scriptUrl: scriptUrl1, map},
+          {scriptId: '2', scriptUrl: scriptUrl2, map},
+        ],
+        Scripts: [
+          {scriptId: '1', url: scriptUrl1, content},
+          {scriptId: '2', url: scriptUrl2, content},
+        ].map(createScript),
       };
       const results = await ScriptTreemapData.audit(artifacts, context);
       if (!results.details || results.details.type !== 'treemap-data') {
@@ -116,12 +125,12 @@ describe('ScriptTreemapData audit', () => {
     });
 
     it('has nodes', () => {
-      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`86817`);
+      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`70077`);
       expect(treemapData.nodes).toMatchSnapshot();
     });
 
     it('finds duplicates', () => {
-      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`86817`);
+      expect(JSON.stringify(treemapData.nodes).length).toMatchInlineSnapshot(`70077`);
       // @ts-ignore all these children exist.
       const leafNode = treemapData.nodes[0].
         children[0].

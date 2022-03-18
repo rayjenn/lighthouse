@@ -27,25 +27,11 @@ import {LH_ROOT, readJson} from '../../../root.js';
 
 const LATEST_RUN_DIR = path.join(LH_ROOT, 'latest-run');
 
-/** @param {LH.DevtoolsLog} log */
-function requestUrlToId(log) {
-  return log.reduce(
-    (map, entry) => {
-      if (entry.method === 'Network.requestWillBeSent') {
-        map[entry.params.request.url] = entry.params.requestId;
-      }
-      return map;
-    },
-    /** @type {Record<string, string>} */ ({})
-  );
-}
-
 async function main() {
   /** @type {LH.Artifacts} */
   const artifacts = readJson(`${LATEST_RUN_DIR}/artifacts.json`);
   const devtoolsLog = readJson(`${LATEST_RUN_DIR}/defaultPass.devtoolslog.json`);
-  const scripts = artifacts.ScriptElements;
-  const requestUrlMap = requestUrlToId(devtoolsLog);
+  const scripts = artifacts.Scripts;
   artifacts.devtoolsLogs = {defaultPass: devtoolsLog};
 
   const auditResults = await LegacyJavascript.audit(artifacts, {
@@ -68,8 +54,8 @@ async function main() {
   console.log(colors.bold(`${items.length} signals found!`));
   for (const item of items) {
     if (typeof item.url !== 'string') continue;
-    const requestId = requestUrlMap[item.url];
-    const script = scripts.find(s => s.requestId === requestId);
+
+    const script = scripts.find(s => s.url === item.url);
     const signals = Array.isArray(item.signals) ? item.signals : [];
     const locations = Array.isArray(item.locations) ? item.locations : [];
 

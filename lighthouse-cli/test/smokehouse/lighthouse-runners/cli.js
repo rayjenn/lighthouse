@@ -78,8 +78,8 @@ async function internalRun(url, tmpPath, configJson, options) {
     '--output=json',
     `-G=${artifactsDirectory}`,
     `-A=${artifactsDirectory}`,
-    '--quiet',
     '--port=0',
+    '--quiet',
   ];
 
   if (useFraggleRock) {

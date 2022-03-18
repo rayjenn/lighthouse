@@ -18,7 +18,7 @@ describe('Page does not use document.write()', () => {
       ConsoleMessages: [],
       URL: {finalUrl: URL},
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, {computedCache: new Map()});
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);
@@ -35,7 +35,7 @@ describe('Page does not use document.write()', () => {
         {source: 'deprecation', url: 'https://example.com/two'},
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, {computedCache: new Map()});
     assert.equal(auditResult.score, 0);
     assert.equal(auditResult.details.items.length, 2);

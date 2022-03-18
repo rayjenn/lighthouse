@@ -7,10 +7,8 @@
 
 const FRGatherer = require('../../fraggle-rock/gather/base-gatherer.js');
 const NetworkRecords = require('../../computed/network-records.js');
-const NetworkAnalyzer = require('../../lib/dependency-graph/simulator/network-analyzer.js');
 const NetworkRequest = require('../../lib/network-request.js');
 const pageFunctions = require('../../lib/page-functions.js');
-const {fetchResponseBodyFromCache} = require('../driver/network.js');
 const DevtoolsLog = require('./devtools-log.js');
 
 /* global getNodeDetails */
@@ -32,35 +30,12 @@ function collectAllScriptElements() {
       async: script.async,
       defer: script.defer,
       source: script.closest('head') ? 'head' : 'body',
-      content: script.src ? null : script.text,
-      requestId: null,
       // @ts-expect-error - getNodeDetails put into scope via stringification
       node: getNodeDetails(script),
     };
   });
 }
 /* c8 ignore stop */
-
-/**
- * @template T, U
- * @param {Array<T>} values
- * @param {(value: T) => Promise<U>} promiseMapper
- * @param {boolean} runInSeries
- * @return {Promise<Array<U>>}
- */
-async function runInSeriesOrParallel(values, promiseMapper, runInSeries) {
-  if (runInSeries) {
-    const results = [];
-    for (const value of values) {
-      const result = await promiseMapper(value);
-      results.push(result);
-    }
-    return results;
-  } else {
-    const promises = values.map(promiseMapper);
-    return await Promise.all(promises);
-  }
-}
 
 /**
  * @fileoverview Gets JavaScript file contents.
@@ -75,13 +50,10 @@ class ScriptElements extends FRGatherer {
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    * @param {LH.Artifacts.NetworkRequest[]} networkRecords
-   * @param {LH.Artifacts['HostFormFactor']} formFactor
    * @return {Promise<LH.Artifacts['ScriptElements']>}
    */
-  async _getArtifact(context, networkRecords, formFactor) {
-    const session = context.driver.defaultSession;
+  async _getArtifact(context, networkRecords) {
     const executionContext = context.driver.executionContext;
-    const mainResource = NetworkAnalyzer.findOptionalMainDocument(networkRecords, context.url);
 
     const scripts = await executionContext.evaluate(collectAllScriptElements, {
       args: [],
@@ -92,34 +64,16 @@ class ScriptElements extends FRGatherer {
       ],
     });
 
-    for (const script of scripts) {
-      if (mainResource && script.content) script.requestId = mainResource.requestId;
-    }
-
     const scriptRecords = networkRecords
+      .filter(record => record.resourceType === NetworkRequest.TYPES.Script)
       // Ignore records from OOPIFs
-      .filter(record => !record.sessionId)
-      // Only get the content of script requests
-      .filter(record => record.resourceType === NetworkRequest.TYPES.Script);
-
-    // If run on a mobile device, be sensitive to memory limitations and only request one
-    // record at a time.
-    const scriptRecordContents = await runInSeriesOrParallel(
-      scriptRecords,
-      record => fetchResponseBodyFromCache(session, record.requestId).catch(() => ''),
-      formFactor === 'mobile' /* runInSeries */
-    );
+      .filter(record => !record.sessionId);
 
     for (let i = 0; i < scriptRecords.length; i++) {
       const record = scriptRecords[i];
-      const content = scriptRecordContents[i];
-      if (!content) continue;
 
       const matchedScriptElement = scripts.find(script => script.src === record.url);
-      if (matchedScriptElement) {
-        matchedScriptElement.requestId = record.requestId;
-        matchedScriptElement.content = content;
-      } else {
+      if (!matchedScriptElement) {
         scripts.push({
           type: null,
           src: record.url,
@@ -127,12 +81,11 @@ class ScriptElements extends FRGatherer {
           async: false,
           defer: false,
           source: 'network',
-          requestId: record.requestId,
-          content,
           node: null,
         });
       }
     }
+
     return scripts;
   }
 
@@ -141,9 +94,8 @@ class ScriptElements extends FRGatherer {
    */
   async getArtifact(context) {
     const devtoolsLog = context.dependencies.DevtoolsLog;
-    const formFactor = context.baseArtifacts.HostFormFactor;
     const networkRecords = await NetworkRecords.request(devtoolsLog, context);
-    return this._getArtifact(context, networkRecords, formFactor);
+    return this._getArtifact(context, networkRecords);
   }
 
   /**
@@ -152,8 +104,7 @@ class ScriptElements extends FRGatherer {
    */
   async afterPass(passContext, loadData) {
     const networkRecords = loadData.networkRecords;
-    const formFactor = passContext.baseArtifacts.HostFormFactor;
-    return this._getArtifact({...passContext, dependencies: {}}, networkRecords, formFactor);
+    return this._getArtifact({...passContext, dependencies: {}}, networkRecords);
   }
 }
 

@@ -31,7 +31,7 @@ class ViolationAudit extends Audit {
     return artifacts.ConsoleMessages
         .filter(entry => entry.url && entry.source === 'violation' && pattern.test(entry.text))
         .map(entry => {
-          const bundle = bundles.find(bundle => bundle.script.src === entry.url);
+          const bundle = bundles.find(bundle => bundle.script.scriptId === entry.scriptId);
           return Audit.makeSourceLocationFromConsoleMessage(entry, bundle);
         })
         .filter(filterUndefined)

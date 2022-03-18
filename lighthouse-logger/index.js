@@ -5,11 +5,11 @@
  */
 'use strict';
 
-const process = require('process');
-const debug = require('debug');
-const marky = require('marky');
+import process from 'process';
+import debug from 'debug';
+import * as marky from 'marky';
+import {EventEmitter} from 'events';
 
-const EventEmitter = require('events').EventEmitter;
 const isWindows = process.platform === 'win32';
 
 // @ts-expect-error: process.browser is set via Rollup.
@@ -55,7 +55,7 @@ const loggersByTitle = {};
 const loggingBufferColumns = 25;
 let level_;
 
-class Log {
+export default class Log {
   static _logToStdErr(title, argsArray) {
     const log = Log.loggerfn(title);
     log(...argsArray);
@@ -239,5 +239,3 @@ Log.takeTimeEntries = () => {
   return entries;
 };
 Log.getTimeEntries = () => marky.getEntries();
-
-module.exports = Log;

@@ -54,14 +54,14 @@ function mockMixedContent(details) {
 }
 
 /**
- * @param {Partial<LH.Crdp.Audits.SameSiteCookieIssueDetails>=} details
+ * @param {Partial<LH.Crdp.Audits.CookieIssueDetails>=} details
  * @return {LH.Crdp.Audits.InspectorIssue} partial
  */
-function mockSameSiteCookie(details) {
+function mockCookie(details) {
   return {
-    code: 'SameSiteCookieIssue',
+    code: 'CookieIssue',
     details: {
-      sameSiteCookieIssueDetails: {
+      cookieIssueDetails: {
         cookie: {
           name: 'name',
           path: 'path',
@@ -156,11 +156,11 @@ describe('instrumentation', () => {
   it('collects inspector issues', async () => {
     const mockContext = createMockContext();
     const mockMixedContentIssue = mockMixedContent({resourceType: 'Audio'});
-    const mockSameSiteCookieIssue =
-      mockSameSiteCookie({cookieWarningReasons: ['WarnSameSiteNoneInsecure']});
+    const mockCookieIssue =
+      mockCookie({cookieWarningReasons: ['WarnSameSiteNoneInsecure']});
     mockContext.driver.defaultSession.on
       .mockEvent('Audits.issueAdded', {issue: mockMixedContentIssue})
-      .mockEvent('Audits.issueAdded', {issue: mockSameSiteCookieIssue});
+      .mockEvent('Audits.issueAdded', {issue: mockCookieIssue});
     mockContext.driver.defaultSession.sendCommand
       .mockResponse('Audits.enable')
       .mockResponse('Audits.disable');
@@ -172,7 +172,7 @@ describe('instrumentation', () => {
 
     expect(gatherer._issues).toEqual([
       mockMixedContentIssue,
-      mockSameSiteCookieIssue,
+      mockCookieIssue,
     ]);
   });
 });
@@ -182,7 +182,7 @@ describe('_getArtifact', () => {
     const gatherer = new InspectorIssues();
     gatherer._issues = [
       mockMixedContent({request: {requestId: '1'}}),
-      mockSameSiteCookie({request: {requestId: '2'}}),
+      mockCookie({request: {requestId: '2'}}),
       mockBlockedByResponse({request: {requestId: '3'}}),
       mockHeavyAd(),
       mockCSP(),
@@ -203,7 +203,7 @@ describe('_getArtifact', () => {
         insecureURL: 'https://example.com',
         mainResourceURL: 'https://example.com',
       }],
-      sameSiteCookieIssue: [{
+      cookieIssue: [{
         request: {requestId: '2'},
         cookie: {
           name: 'name',
@@ -257,8 +257,8 @@ describe('_getArtifact', () => {
     gatherer._issues = [
       mockMixedContent({request: {requestId: '1'}}),
       mockMixedContent({request: {requestId: '2'}}),
-      mockSameSiteCookie({request: {requestId: '3'}}),
-      mockSameSiteCookie({request: {requestId: '4'}}),
+      mockCookie({request: {requestId: '3'}}),
+      mockCookie({request: {requestId: '4'}}),
       mockBlockedByResponse({request: {requestId: '5'}}),
       mockBlockedByResponse({request: {requestId: '6'}}),
     ];
@@ -277,7 +277,7 @@ describe('_getArtifact', () => {
         insecureURL: 'https://example.com',
         mainResourceURL: 'https://example.com',
       }],
-      sameSiteCookieIssue: [{
+      cookieIssue: [{
         request: {requestId: '3'},
         cookie: {
           name: 'name',
@@ -351,7 +351,7 @@ describe('FR compat', () => {
         insecureURL: 'https://example.com',
         mainResourceURL: 'https://example.com',
       }],
-      sameSiteCookieIssue: [],
+      cookieIssue: [],
       blockedByResponseIssue: [],
       heavyAdIssue: [],
       clientHintIssue: [],
@@ -387,7 +387,7 @@ describe('FR compat', () => {
         insecureURL: 'https://example.com',
         mainResourceURL: 'https://example.com',
       }],
-      sameSiteCookieIssue: [],
+      cookieIssue: [],
       blockedByResponseIssue: [],
       clientHintIssue: [],
       heavyAdIssue: [],

@@ -48,7 +48,7 @@ class Deprecations extends Audit {
       title: str_(UIStrings.title),
       failureTitle: str_(UIStrings.failureTitle),
       description: str_(UIStrings.description),
-      requiredArtifacts: ['ConsoleMessages', 'InspectorIssues', 'SourceMaps', 'ScriptElements'],
+      requiredArtifacts: ['ConsoleMessages', 'InspectorIssues', 'SourceMaps', 'Scripts'],
     };
   }
 
@@ -65,8 +65,8 @@ class Deprecations extends Audit {
     if (artifacts.InspectorIssues.deprecationIssue.length) {
       deprecations = artifacts.InspectorIssues.deprecationIssue
         .map(deprecation => {
-          const {url, lineNumber, columnNumber} = deprecation.sourceCodeLocation;
-          const bundle = bundles.find(bundle => bundle.script.src === url);
+          const {scriptId, url, lineNumber, columnNumber} = deprecation.sourceCodeLocation;
+          const bundle = bundles.find(bundle => bundle.script.scriptId === scriptId);
           return {
             value: deprecation.message || '',
             // Protocol.Audits.SourceCodeLocation.columnNumber is 1-indexed, but we use 0-indexed.

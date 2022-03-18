@@ -43,6 +43,7 @@ jobs:
       run: xvfb-run --auto-servernum bash $GITHUB_WORKSPACE/.github/scripts/jest-retry.sh yarn test-treemap
 
     - run: yarn diff:sample-json
+    - run: yarn diff:flow-sample-json
     - run: yarn type-check
     - run: yarn lint
     - run: yarn test-lantern

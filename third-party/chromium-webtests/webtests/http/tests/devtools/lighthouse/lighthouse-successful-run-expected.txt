@@ -43,6 +43,7 @@ Gathering setup: ImageElements
 Gathering setup: LinkElements
 Gathering setup: MetaElements
 Gathering setup: ScriptElements
+Gathering setup: Scripts
 Gathering setup: IFrameElements
 Gathering setup: MainDocumentContent
 Gathering setup: GlobalListeners
@@ -74,6 +75,7 @@ Gathering in-page: ImageElements
 Gathering in-page: LinkElements
 Gathering in-page: MetaElements
 Gathering in-page: ScriptElements
+Gathering in-page: Scripts
 Gathering in-page: IFrameElements
 Gathering in-page: MainDocumentContent
 Gathering in-page: GlobalListeners
@@ -105,6 +107,7 @@ Gathering: ImageElements
 Gathering: LinkElements
 Gathering: MetaElements
 Gathering: ScriptElements
+Gathering: Scripts
 Gathering: IFrameElements
 Gathering: MainDocumentContent
 Gathering: GlobalListeners
@@ -371,7 +374,7 @@ Generating results...
 
 =============== Lighthouse Results ===============
 URL: http://127.0.0.1:8000/devtools/lighthouse/resources/lighthouse-basic.html
-Version: 9.3.1
+Version: 9.5.0
 ViewportDimensions: {
   "innerWidth": 980,
   "innerHeight": 1743,

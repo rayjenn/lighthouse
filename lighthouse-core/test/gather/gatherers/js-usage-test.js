@@ -20,26 +20,18 @@ describe('JsUsage gatherer', () => {
   /**
    * `scriptParsedEvents` mocks the `Debugger.scriptParsed` events.
    * `coverage` mocks the result of `Profiler.takePreciseCoverage`.
-   * @param {{coverage: LH.Crdp.Profiler.ScriptCoverage[], scriptParsedEvents: LH.Crdp.Debugger.ScriptParsedEvent[]}} _
+   * @param {{coverage: LH.Crdp.Profiler.ScriptCoverage[]}} _
    * @return {Promise<LH.Artifacts['JsUsage']>}
    */
-  async function runJsUsage({coverage, scriptParsedEvents = []}) {
+  async function runJsUsage({coverage}) {
     const onMock = createMockOnFn();
     const sendCommandMock = createMockSendCommandFn()
       .mockResponse('Profiler.enable', {})
       .mockResponse('Profiler.disable', {})
-      .mockResponse('Debugger.enable', {})
-      .mockResponse('Debugger.disable', {})
       .mockResponse('Profiler.startPreciseCoverage', {})
       .mockResponse('Profiler.takePreciseCoverage', {result: coverage})
       .mockResponse('Profiler.stopPreciseCoverage', {});
 
-    for (const scriptParsedEvent of scriptParsedEvents) {
-      onMock.mockEvent('protocolevent', {
-        method: 'Debugger.scriptParsed',
-        params: scriptParsedEvent,
-      });
-    }
     const connectionStub = new Connection();
     connectionStub.sendCommand = sendCommandMock;
     connectionStub.on = onMock;
@@ -53,8 +45,6 @@ describe('JsUsage gatherer', () => {
     // Needed for protocol events to emit.
     await flushAllTimersAndMicrotasks(1);
 
-    expect(gatherer._scriptParsedEvents).toEqual(scriptParsedEvents);
-
     await gatherer.stopSensitiveInstrumentation({driver});
     await gatherer.stopInstrumentation({driver});
 
@@ -63,26 +53,24 @@ describe('JsUsage gatherer', () => {
     return gatherer.getArtifact({gatherMode: 'navigation'});
   }
 
-  it('combines coverage data by url', async () => {
+  it('collects coverage data', async () => {
     const coverage = [
       {scriptId: '1', url: 'https://www.example.com'},
       {scriptId: '2', url: 'https://www.example.com'},
     ];
     const artifact = await runJsUsage({coverage});
     expect(artifact).toMatchInlineSnapshot(`
-      Object {
-        "https://www.example.com": Array [
-          Object {
-            "scriptId": "1",
-            "url": "https://www.example.com",
-          },
-          Object {
-            "scriptId": "2",
-            "url": "https://www.example.com",
-          },
-        ],
-      }
-    `);
+Object {
+  "1": Object {
+    "scriptId": "1",
+    "url": "https://www.example.com",
+  },
+  "2": Object {
+    "scriptId": "2",
+    "url": "https://www.example.com",
+  },
+}
+`);
   });
 
   it('ignore coverage data with empty url', async () => {
@@ -91,49 +79,27 @@ describe('JsUsage gatherer', () => {
     expect(artifact).toMatchInlineSnapshot(`Object {}`);
   });
 
-  it('uses ScriptParsedEvent embedderName over coverage data url', async () => {
-    const coverage = [{scriptId: '1', url: 'LOL WHAT'}];
-    const scriptParsedEvents = [{scriptId: '1', embedderName: 'https://www.example.com'}];
+  it('ignore coverage if for empty url', async () => {
+    const coverage = [
+      {scriptId: '1', url: 'https://www.example.com'},
+      {scriptId: '2', url: ''},
+    ];
+    const scriptParsedEvents = [
+      {scriptId: '1', embedderName: ''},
+      {scriptId: '2', embedderName: 'https://www.example.com'},
+    ];
     const artifact = await runJsUsage({coverage, scriptParsedEvents});
     expect(artifact).toMatchInlineSnapshot(`
-      Object {
-        "https://www.example.com": Array [
-          Object {
-            "scriptId": "1",
-            "url": "LOL WHAT",
-          },
-        ],
-      }
-    `);
+Object {
+  "1": Object {
+    "scriptId": "1",
+    "url": "https://www.example.com",
+  },
+}
+`);
   });
 
-  it('just establishes url to script id mappings in snapshot mode', async () => {
-    const context = createMockContext();
-    context.gatherMode = 'snapshot';
-    context.driver._session.on
-      .mockEvent('Debugger.scriptParsed', {
-        scriptId: '1',
-        embedderName: 'https://www.example.com',
-      });
-    context.driver._session.sendCommand
-      // Events are flushed on domain enable.
-      .mockResponse('Debugger.enable', flushAllTimersAndMicrotasks)
-      .mockResponse('Debugger.disable', {});
-
-    const artifact = await new JsUsage().getArtifact(context.asContext());
-
-    expect(artifact).toEqual({
-      'https://www.example.com': [
-        {
-          scriptId: '1',
-          url: 'https://www.example.com',
-          functions: [],
-        },
-      ],
-    });
-  });
-
-  it('adds script coverages without coverage in timespan', async () => {
+  it('does not have entry for script with no coverage data', async () => {
     const context = createMockContext();
     context.gatherMode = 'timespan';
     context.driver._session.on
@@ -148,8 +114,6 @@ describe('JsUsage gatherer', () => {
     context.driver._session.sendCommand
       .mockResponse('Profiler.enable', {})
       .mockResponse('Profiler.disable', {})
-      .mockResponse('Debugger.enable', {})
-      .mockResponse('Debugger.disable', {})
       .mockResponse('Profiler.startPreciseCoverage', {})
       .mockResponse('Profiler.takePreciseCoverage', {
         result: [{
@@ -173,20 +137,11 @@ describe('JsUsage gatherer', () => {
     const artifact = await gatherer.getArtifact(context);
 
     expect(artifact).toEqual({
-      'https://www.example.com': [
-        {
-          scriptId: '1',
-          url: 'https://www.example.com',
-          functions: [],
-        },
-      ],
-      'https://www.example.com/script.js': [
-        {
-          scriptId: '2',
-          url: 'https://www.example.com/script.js',
-          functions: [],
-        },
-      ],
+      '1': {
+        scriptId: '1',
+        url: 'https://www.example.com',
+        functions: [],
+      },
     });
   });
 });

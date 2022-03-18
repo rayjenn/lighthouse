@@ -17,7 +17,7 @@ describe('ConsoleMessages deprecations audit', () => {
       ConsoleMessages: [],
       InspectorIssues: {deprecationIssue: []},
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);
@@ -34,7 +34,7 @@ describe('ConsoleMessages deprecations audit', () => {
       ],
       InspectorIssues: {deprecationIssue: []},
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     expect(auditResult.displayValue).toBeDisplayString('1 warning found');
@@ -67,7 +67,7 @@ describe('ConsoleMessages deprecations audit', () => {
       ],
       InspectorIssues: {deprecationIssue: []},
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     expect(auditResult.displayValue).toBeDisplayString('2 warnings found');
@@ -110,7 +110,7 @@ describe('ConsoleMessages deprecations audit', () => {
         ],
       },
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
 
     assert.equal(auditResult.score, 0);

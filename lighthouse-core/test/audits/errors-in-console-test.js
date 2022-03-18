@@ -16,7 +16,7 @@ describe('ConsoleMessages error logs audit', () => {
     const auditResult = await ErrorLogsAudit.audit({
       ConsoleMessages: [],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.ok(!auditResult.displayValue, 0);
@@ -34,7 +34,7 @@ describe('ConsoleMessages error logs audit', () => {
         },
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 1);
     assert.equal(auditResult.details.items.length, 0);
@@ -73,7 +73,7 @@ describe('ConsoleMessages error logs audit', () => {
         },
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
 
     assert.equal(auditResult.score, 0);
@@ -101,7 +101,7 @@ describe('ConsoleMessages error logs audit', () => {
         },
       ],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     assert.equal(auditResult.details.items.length, 1);
@@ -132,7 +132,7 @@ describe('ConsoleMessages error logs audit', () => {
         },
       }],
       SourceMaps: [],
-      ScriptElements: [],
+      Scripts: [],
     }, context);
     assert.equal(auditResult.score, 0);
     assert.equal(auditResult.details.items.length, 1);
@@ -155,7 +155,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(0);
@@ -172,7 +172,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(0);
@@ -189,7 +189,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(0);
@@ -208,7 +208,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(1);
@@ -227,7 +227,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(1);
@@ -253,7 +253,7 @@ describe('ConsoleMessages error logs audit', () => {
           },
         ],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
 
       expect(result.score).toBe(1);
@@ -274,7 +274,7 @@ describe('ConsoleMessages error logs audit', () => {
           'text': 'Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector',
         }],
         SourceMaps: [],
-        ScriptElements: [],
+        Scripts: [],
       }, context);
       assert.equal(auditResult.score, 1);
       assert.equal(auditResult.details.items.length, 0);

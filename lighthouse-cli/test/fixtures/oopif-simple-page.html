@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="simple-script.js"></script>
+  <script>
+    new Worker('simple-worker.mjs', { type: 'module' });
+    new Worker('simple-worker.js');
+
+    window.addEventListener('load', () => {
+      fetch('simple-script.js').then(r => r.text()).then(eval);
+    });
+  </script>
+</head>
+<body>
+  <h1>Just a simple page</h1>
+</body>
+</html>
