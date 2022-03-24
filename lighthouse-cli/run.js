@@ -227,9 +227,9 @@ async function runLighthouse(url, flags, config) {
     }
 
     if (flags.fraggleRock) {
-      flags.channel = 'cli';
+      flags.channel = 'fraggle-rock-cli';
     } else {
-      flags.channel = 'legacy-cli';
+      flags.channel = 'cli';
     }
 
     const runnerResult = flags.fraggleRock ?

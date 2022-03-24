@@ -44,7 +44,6 @@ const DEFAULT_PORT = 9222;
 async function lighthouse(url, flags = {}, configJSON, page) {
   if (!page) {
     const {hostname = DEFAULT_HOSTNAME, port = DEFAULT_PORT} = flags;
-    console.log(hostname, port);
     const browser = await puppeteer.connect({browserURL: `http://${hostname}:${port}`});
     page = await browser.newPage();
   }
