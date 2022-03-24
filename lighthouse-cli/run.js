@@ -198,27 +198,6 @@ async function potentiallyKillChrome(launchedChrome) {
  * @param {string} url
  * @param {LH.CliFlags} flags
  * @param {LH.Config.Json|undefined} config
- * @param {ChromeLauncher.LaunchedChrome} launchedChrome
- * @return {Promise<LH.RunnerResult|undefined>}
- */
-async function runLighthouseWithFraggleRock(url, flags, config, launchedChrome) {
-  const fraggleRock = (await import('../lighthouse-core/fraggle-rock/api.js')).default;
-  const puppeteer = (await import('puppeteer')).default;
-  const browser = await puppeteer.connect({browserURL: `http://localhost:${launchedChrome.port}`});
-  const page = await browser.newPage();
-  flags.channel = 'fraggle-rock-cli';
-  const configContext = {
-    configPath: flags.configPath,
-    settingsOverrides: flags,
-    logLevel: flags.logLevel,
-  };
-  return fraggleRock.navigation(url, {page, config, configContext});
-}
-
-/**
- * @param {string} url
- * @param {LH.CliFlags} flags
- * @param {LH.Config.Json|undefined} config
  * @return {Promise<LH.RunnerResult|undefined>}
  */
 async function runLighthouse(url, flags, config) {
@@ -247,9 +226,15 @@ async function runLighthouse(url, flags, config) {
       flags.port = launchedChrome.port;
     }
 
-    const runnerResult = flags.fraggleRock && launchedChrome ?
-       await runLighthouseWithFraggleRock(url, flags, config, launchedChrome) :
-       await lighthouse(url, flags, config);
+    if (flags.fraggleRock) {
+      flags.channel = 'cli';
+    } else {
+      flags.channel = 'legacy-cli';
+    }
+
+    const runnerResult = flags.fraggleRock ?
+       await lighthouse(url, flags, config) :
+       await lighthouse.legacyNavigation(url, flags, config);
 
     // If in gatherMode only, there will be no runnerResult.
     if (runnerResult) {

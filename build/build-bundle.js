@@ -91,6 +91,7 @@ async function build(entryPath, distPath, opts = {minify: true}) {
   const shimsObj = {};
 
   const modulesToIgnore = [
+    'puppeteer',
     'intl-pluralrules',
     'intl',
     'pako/lib/zlib/inflate.js',

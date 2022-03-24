@@ -25,7 +25,7 @@ npm explore lighthouse -- npm run fast -- http://example.com
 
 # Packaged smokehouse/lighthouse using root's static-server and test fixtures.
 # This is because we don't have access to any of the dev dependencies.
-CI="" yarn smokehouse --tests-path="$LH_ROOT/lighthouse-cli/test/smokehouse/core-tests.js" --retries=2
+CI="" yarn smokehouse --tests-path="$LH_ROOT/lighthouse-cli/test/smokehouse/core-tests.js" --retries=2 $*
 
 cd "$LH_ROOT"
 rm -rf /tmp/lighthouse-local-test

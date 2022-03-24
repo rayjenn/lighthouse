@@ -89,7 +89,7 @@ if (typeof self !== 'undefined') {
   // @ts-expect-error
   self.setUpWorkerConnection = setUpWorkerConnection;
   // @ts-expect-error
-  self.runLighthouse = lighthouse;
+  self.runLighthouse = lighthouse.legacyNavigation;
   // @ts-expect-error
   self.runLighthouseNavigation = navigation;
   // @ts-expect-error

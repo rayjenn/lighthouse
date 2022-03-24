@@ -165,3 +165,34 @@ jobs:
       with:
         name: Smokehouse (bundled)
         path: .tmp/smokehouse-ci-failures/
+
+  smoke-bundle-fr:
+    runs-on: ubuntu-latest
+    name: Bundled Fraggle Rock
+
+    steps:
+    - name: git clone
+      uses: actions/checkout@v2
+
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+    - run: yarn install --frozen-lockfile --network-timeout 1000000
+    - run: yarn build-report
+    - run: yarn build-devtools
+
+    - run: sudo apt-get install xvfb
+    - name: yarn test-bundle
+      run: xvfb-run --auto-servernum yarn test-bundle --fraggle-rock
+
+    # Fail if any changes were written to source files.
+    - run: git diff --exit-code
+
+    - name: Upload dist
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: Smokehouse (bundled)
+        path: .tmp/smokehouse-ci-failures/

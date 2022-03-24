@@ -162,6 +162,7 @@ async function runSmokeTest(smokeTestDefn, testOptions) {
     report = getAssertionReport(result, expectations, {
       runner: lighthouseRunner.runnerName,
       isDebug,
+      useFraggleRock,
     });
 
     runs.push({

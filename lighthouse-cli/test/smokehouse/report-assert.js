@@ -220,10 +220,10 @@ function makeComparison(name, actualResult, expectedResult) {
  * @param {LocalConsole} localConsole
  * @param {LH.Result} lhr
  * @param {Smokehouse.ExpectedRunnerResult} expected
- * @param {{runner?: string, isBundled?: boolean}=} reportOptions
+ * @param {{runner?: string, isBundled?: boolean, useFraggleRock?: boolean}=} reportOptions
  */
 function pruneExpectations(localConsole, lhr, expected, reportOptions) {
-  const isFraggleRock = lhr.configSettings.channel === 'fraggle-rock-cli';
+  const isFraggleRock = reportOptions?.useFraggleRock;
   const isBundled = reportOptions?.isBundled;
 
   /**
@@ -456,7 +456,7 @@ function reportAssertion(localConsole, assertion) {
  * summary. Returns count of passed and failed tests.
  * @param {{lhr: LH.Result, artifacts: LH.Artifacts, networkRequests?: string[]}} actual
  * @param {Smokehouse.ExpectedRunnerResult} expected
- * @param {{runner?: string, isDebug?: boolean, isBundled?: boolean}=} reportOptions
+ * @param {{runner?: string, isDebug?: boolean, isBundled?: boolean, useFraggleRock?: boolean}=} reportOptions
  * @return {{passed: number, failed: number, log: string}}
  */
 function getAssertionReport(actual, expected, reportOptions = {}) {

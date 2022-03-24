@@ -63,7 +63,7 @@ export async function runLighthouseInLR(connection, url, flags, lrOpts) {
   }
 
   try {
-    const runnerResult = await lighthouse(url, flags, config, connection);
+    const runnerResult = await lighthouse.legacyNavigation(url, flags, config, connection);
     if (!runnerResult) throw new Error('Lighthouse finished without a runnerResult');
 
     // pre process the LHR for proto

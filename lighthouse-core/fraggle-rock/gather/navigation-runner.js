@@ -289,7 +289,7 @@ async function _cleanup({requestedUrl, driver, config}) {
 }
 
 /**
- * @param {LH.NavigationRequestor} requestor
+ * @param {LH.NavigationRequestor|undefined} requestor
  * @param {{page: import('puppeteer').Page, config?: LH.Config.Json, configContext?: LH.Config.FRContext}} options
  * @return {Promise<LH.Gatherer.FRGatherResult>}
  */
@@ -304,7 +304,8 @@ async function navigationGather(requestor, options) {
   };
 
   // We can't trigger the navigation through user interaction if we reset the page before starting.
-  if (typeof requestor !== 'string') {
+  const isCallback = typeof requestor === 'function';
+  if (isCallback) {
     internalOptions.skipAboutBlank = true;
   }
 
@@ -315,7 +316,7 @@ async function navigationGather(requestor, options) {
       const context = {
         driver,
         config,
-        requestor: typeof requestor === 'string' ? URL.normalizeUrl(requestor) : requestor,
+        requestor: isCallback ? requestor : URL.normalizeUrl(requestor),
         options: internalOptions,
       };
       const {baseArtifacts} = await _setup(context);
