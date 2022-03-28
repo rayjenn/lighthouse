@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const Runner = require('./runner.js');
 const log = require('lighthouse-logger');
 const ChromeProtocol = require('./gather/connections/cri.js');
@@ -38,7 +38,7 @@ const DEFAULT_PORT = 9222;
  *   they will override any settings in the config.
  * @param {LH.Config.Json=} configJSON Configuration for the Lighthouse run. If
  *   not present, the default config is used.
- * @param {import('puppeteer').Page=} page
+ * @param {LH.Puppeteer.Page=} page
  * @return {Promise<LH.RunnerResult|undefined>}
  */
 async function lighthouse(url, flags = {}, configJSON, page) {

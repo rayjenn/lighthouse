@@ -290,7 +290,7 @@ async function _cleanup({requestedUrl, driver, config}) {
 
 /**
  * @param {LH.NavigationRequestor|undefined} requestor
- * @param {{page: import('puppeteer').Page, config?: LH.Config.Json, configContext?: LH.Config.FRContext}} options
+ * @param {{page: LH.Puppeteer.Page, config?: LH.Config.Json, configContext?: LH.Config.FRContext}} options
  * @return {Promise<LH.Gatherer.FRGatherResult>}
  */
 async function navigationGather(requestor, options) {

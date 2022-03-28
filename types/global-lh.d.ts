@@ -22,12 +22,15 @@ import * as Settings from './lhr/settings';
 import StructuredData_ from './structured-data';
 import Treemap_ from './lhr/treemap';
 import UserFlow_ from './user-flow';
+import puppeteer from 'puppeteer-core';
 
 // Construct hierarchy of global types under the LH namespace.
 declare global {
   module LH {
     export type ArbitraryEqualityMap = ArbitraryEqualityMap_;
     export type NavigationRequestor = string | (() => Promise<void> | void);
+
+    export import Puppeteer = puppeteer;
 
     // artifacts.d.ts
     export import Artifacts = Artifacts_.Artifacts;

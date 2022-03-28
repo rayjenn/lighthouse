@@ -13,7 +13,7 @@ const {generateFlowReportHtml} = require('../../report/generator/report-generato
 const Runner = require('../runner.js');
 
 /**
- * @param {import('puppeteer').Page} page
+ * @param {LH.Puppeteer.Page} page
  * @param {ConstructorParameters<LH.UserFlow>[1]} [options]
  */
 async function startFlow(page, options) {

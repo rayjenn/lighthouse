@@ -35,7 +35,7 @@ const defaultSession = {
 /** @implements {LH.Gatherer.FRTransitionalDriver} */
 class Driver {
   /**
-   * @param {import('puppeteer').Page} page
+   * @param {LH.Puppeteer.Page} page
    */
   constructor(page) {
     this._page = page;
