@@ -19,11 +19,11 @@ const DELEGATED_FUNCTIONS = [
   'sendCommand',
 ];
 
-/** @type {import('puppeteer').Page} */
+/** @type {LH.Puppeteer.Page} */
 let page;
-/** @type {import('puppeteer').Target} */
+/** @type {LH.Puppeteer.Target} */
 let pageTarget;
-/** @type {import('puppeteer').CDPSession} */
+/** @type {LH.Puppeteer.CDPSession} */
 let puppeteerSession;
 /** @type {Driver} */
 let driver;

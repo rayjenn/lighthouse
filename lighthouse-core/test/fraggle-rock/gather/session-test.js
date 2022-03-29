@@ -20,7 +20,7 @@ jest.useFakeTimers();
 describe('ProtocolSession', () => {
   const DEFAULT_TIMEOUT = 30_000;
 
-  /** @type {import('puppeteer').CDPSession} */
+  /** @type {LH.Puppeteer.CDPSession} */
   let puppeteerSession;
   /** @type {ProtocolSession} */
   let session;

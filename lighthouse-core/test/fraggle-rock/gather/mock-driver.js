@@ -69,7 +69,7 @@ function createMockPage() {
     goto: jest.fn(),
     target: () => ({createCDPSession: () => createMockSession()}),
 
-    /** @return {import('puppeteer').Page} */
+    /** @return {LH.Puppeteer.Page} */
     asPage() {
       // @ts-expect-error - We'll rely on the tests passing to know this matches.
       return this;

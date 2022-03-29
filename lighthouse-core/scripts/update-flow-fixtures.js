@@ -10,7 +10,7 @@ import assert from 'assert';
 
 import open from 'open';
 import waitForExpect from 'wait-for-expect';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import yargs from 'yargs';
 
 import {LH_ROOT} from '../../root.js';
@@ -40,7 +40,7 @@ const args = yargs(process.argv.slice(2))
   })
   .parseSync();
 
-/** @param {puppeteer.Page} page */
+/** @param {LH.Puppeteer.Page} page */
 async function waitForImagesToLoad(page) {
   const TIMEOUT = 30_000;
   const QUIET_WINDOW = 3_000;

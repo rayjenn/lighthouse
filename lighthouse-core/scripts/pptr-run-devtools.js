@@ -26,7 +26,7 @@ import fs from 'fs';
 import readline from 'readline';
 import {fileURLToPath} from 'url';
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import yargs from 'yargs';
 import * as yargsHelpers from 'yargs/helpers';
 
@@ -170,8 +170,8 @@ function isValidUrl(url) {
 }
 
 /**
- * @param {import('puppeteer').Page} page
- * @param {import('puppeteer').Browser} browser
+ * @param {LH.Puppeteer.Page} page
+ * @param {LH.Puppeteer.Browser} browser
  * @param {string} url
  * @param {LH.Config.Json=} config
  * @return {Promise<{lhr: LH.Result, artifacts: LH.Artifacts}>}
@@ -225,7 +225,7 @@ async function testPage(page, browser, url, config) {
     });
   }
 
-  /** @type {Omit<puppeteer.Protocol.Runtime.EvaluateResponse, 'result'>|undefined} */
+  /** @type {Omit<LH.Puppeteer.Protocol.Runtime.EvaluateResponse, 'result'>|undefined} */
   let startLHResponse;
   while (!startLHResponse || startLHResponse.exceptionDetails) {
     if (startLHResponse) await new Promise(resolve => setTimeout(resolve, 1000));
@@ -235,7 +235,7 @@ async function testPage(page, browser, url, config) {
     }).catch(err => ({exceptionDetails: err}));
   }
 
-  /** @type {puppeteer.Protocol.Runtime.EvaluateResponse} */
+  /** @type {LH.Puppeteer.Protocol.Runtime.EvaluateResponse} */
   const lhStartedResponse = await session.send('Runtime.evaluate', {
     expression: sniffLighthouseStarted,
     awaitPromise: true,
@@ -253,7 +253,7 @@ async function testPage(page, browser, url, config) {
       JSON.stringify(lhStartedResponse.result.value)}`);
   }
 
-  /** @type {puppeteer.Protocol.Runtime.EvaluateResponse} */
+  /** @type {LH.Puppeteer.Protocol.Runtime.EvaluateResponse} */
   const remoteLhrResponse = await session.send('Runtime.evaluate', {
     expression: sniffLhr,
     awaitPromise: true,

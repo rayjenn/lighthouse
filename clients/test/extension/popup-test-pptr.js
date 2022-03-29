@@ -8,7 +8,7 @@
 /* eslint-env jest */
 
 const path = require('path');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const {DEFAULT_CATEGORIES, STORAGE_KEYS} =
   require('../../extension/scripts/settings-controller.js');
 const {LH_ROOT} = require('../../../root.js');

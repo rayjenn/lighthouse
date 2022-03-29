@@ -13,7 +13,7 @@
 
 import fs from 'fs';
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import ChromeLauncher from 'chrome-launcher';
 
 import ChromeProtocol from '../../../../lighthouse-core/gather/connections/cri.js';

@@ -10,13 +10,13 @@
  * node lighthouse-core/scripts/benchmark-plus-extras.js
  */
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 
 import pageFunctions from '../lib/page-functions.js';
 
-/** @param {import('puppeteer').Page} page */
+/** @param {LH.Puppeteer.Page} page */
 async function runOctane(page) {
-  /** @param {import('puppeteer').ConsoleMessage} message */
+  /** @param {LH.Puppeteer.ConsoleMessage} message */
   const pageLogger = message => process.stdout.write(`  ${message.text()}\n`);
 
   process.stdout.write(`Running Octane...\n`);
@@ -41,7 +41,7 @@ async function runOctane(page) {
   page.off('console', pageLogger);
 }
 
-/** @param {import('puppeteer').Page} page */
+/** @param {LH.Puppeteer.Page} page */
 async function runSpeedometer(page) {
   process.stdout.write(`Running Speedometer...\n`);
   await page.goto('https://browserbench.org/Speedometer2.0/', {waitUntil: 'networkidle0'});

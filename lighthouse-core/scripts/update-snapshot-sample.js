@@ -7,7 +7,7 @@
 
 import fs from 'fs';
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 
 import {LH_ROOT} from '../../root.js';
 import {snapshot} from '../fraggle-rock/api.js';
