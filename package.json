@@ -164,6 +164,7 @@
     "pako": "^2.0.3",
     "preact": "^10.5.14",
     "pretty-json-stringify": "^0.0.2",
+    "puppeteer": "10.2.0",
     "resolve": "^1.20.0",
     "rollup": "^2.52.7",
     "rollup-plugin-node-resolve": "^5.2.0",
