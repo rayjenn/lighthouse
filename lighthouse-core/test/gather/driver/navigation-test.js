@@ -85,7 +85,7 @@ describe('.gotoURL', () => {
 
     const results = await loadPromise;
     expect(results.requestedUrl).toEqual('http://example.com');
-    expect(results.finalUrl).toEqual('https://m.example.com/client');
+    expect(results.mainDocumentUrl).toEqual('https://m.example.com/client');
     expect(results.warnings).toMatchObject([
       {
         values: {
@@ -112,7 +112,7 @@ describe('.gotoURL', () => {
 
     const results = await loadPromise;
     expect(results.requestedUrl).toEqual('https://www.example.com');
-    expect(results.finalUrl).toEqual('https://www.example.com');
+    expect(results.mainDocumentUrl).toEqual('https://www.example.com');
   });
 
   it('throws if no navigations found using a callback requestor', async () => {
@@ -248,7 +248,7 @@ describe('.getNavigationWarnings()', () => {
   const normalNavigation = {
     timedOut: false,
     requestedUrl: 'http://example.com/',
-    finalUrl: 'http://example.com/',
+    mainDocumentUrl: 'http://example.com/',
   };
 
   it('finds no warnings by default', () => {
@@ -262,27 +262,27 @@ describe('.getNavigationWarnings()', () => {
   });
 
   it('adds a url mismatch warning', () => {
-    const finalUrl = 'https://m.example.com/client';
-    const warnings = getNavigationWarnings({...normalNavigation, finalUrl});
+    const mainDocumentUrl = 'https://m.example.com/client';
+    const warnings = getNavigationWarnings({...normalNavigation, mainDocumentUrl});
     expect(warnings).toMatchObject([
       {
         values: {
           requested: 'http://example.com/',
-          final: finalUrl,
+          final: mainDocumentUrl,
         },
       },
     ]);
   });
 
   it('does not add a url mismatch warning for fragment differences', () => {
-    const finalUrl = 'http://example.com/#fragment';
-    const warnings = getNavigationWarnings({...normalNavigation, finalUrl});
+    const mainDocumentUrl = 'http://example.com/#fragment';
+    const warnings = getNavigationWarnings({...normalNavigation, mainDocumentUrl});
     expect(warnings).toHaveLength(0);
   });
 
   it('adds a url mismatch warning for failed navigations', () => {
-    const finalUrl = 'chrome-error://chromewebdata/';
-    const warnings = getNavigationWarnings({...normalNavigation, finalUrl});
+    const mainDocumentUrl = 'chrome-error://chromewebdata/';
+    const warnings = getNavigationWarnings({...normalNavigation, mainDocumentUrl});
     expect(warnings).toHaveLength(1);
   });
 });

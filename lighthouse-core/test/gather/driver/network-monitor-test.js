@@ -157,7 +157,7 @@ describe('NetworkMonitor', () => {
     });
   });
 
-  describe('.getFinalNavigationUrl()', () => {
+  describe('.getNavigationUrls()', () => {
     it('should handle the empty case', async () => {
       expect(await monitor.getNavigationUrls()).toEqual({});
     });
@@ -174,7 +174,32 @@ describe('NetworkMonitor', () => {
 
       expect(await monitor.getNavigationUrls()).toEqual({
         requestedUrl: 'https://example.com',
-        finalUrl: 'https://page.example.com',
+        mainDocumentUrl: 'https://page.example.com',
+      });
+    });
+
+    it('should handle server redirects', async () => {
+      sendCommandMock.mockResponse('Page.getResourceTree', {frameTree: {frame: {id: '1'}}});
+      await monitor.enable();
+
+      // One server redirect followed by a client redirect
+      const devtoolsLog = networkRecordsToDevtoolsLog([
+        {requestId: '1', startTime: 100, url: 'https://example.com', priority: 'VeryHigh'},
+        {requestId: '1:redirect', startTime: 200, url: 'https://intermediate.example.com', priority: 'VeryHigh'},
+        {requestId: '2', startTime: 300, url: 'https://page.example.com', priority: 'VeryHigh'},
+      ]);
+      for (const event of devtoolsLog) {
+        sessionMock.dispatch(event);
+      }
+
+      const type = 'Navigation';
+      const frame = /** @type {*} */ ({id: '1', url: 'https://page.example.com'});
+      sessionMock.dispatch({method: 'Page.frameNavigated', params: {frame: {...frame, url: 'https://intermediate.example.com'}, type}}); // eslint-disable-line max-len
+      sessionMock.dispatch({method: 'Page.frameNavigated', params: {frame, type}});
+
+      expect(await monitor.getNavigationUrls()).toEqual({
+        requestedUrl: 'https://example.com',
+        mainDocumentUrl: 'https://page.example.com',
       });
     });
 
@@ -190,7 +215,7 @@ describe('NetworkMonitor', () => {
 
       expect(await monitor.getNavigationUrls()).toEqual({
         requestedUrl: 'https://page.example.com',
-        finalUrl: 'https://page.example.com',
+        mainDocumentUrl: 'https://page.example.com',
       });
     });
   });

@@ -32,12 +32,12 @@ async function startTimespanGather(options) {
   /** @type {Map<string, LH.ArbitraryEqualityMap>} */
   const computedCache = new Map();
   const artifactDefinitions = config.artifacts || [];
-  const requestedUrl = await driver.url();
+  const initialUrl = await driver.url();
   const baseArtifacts = await getBaseArtifacts(config, driver, {gatherMode: 'timespan'});
   const artifactState = getEmptyArtifactState();
   /** @type {Omit<import('./runner-helpers.js').CollectPhaseArtifactOptions, 'phase'>} */
   const phaseOptions = {
-    url: requestedUrl,
+    url: initialUrl,
     driver,
     artifactDefinitions,
     artifactState,
@@ -59,8 +59,12 @@ async function startTimespanGather(options) {
       const runnerOptions = {config, computedCache};
       const artifacts = await Runner.gather(
         async () => {
-          baseArtifacts.URL.requestedUrl = requestedUrl;
-          baseArtifacts.URL.finalUrl = finalUrl;
+          baseArtifacts.URL = {
+            initialUrl,
+            // TODO: Remove requestedUrl from timespan mode
+            requestedUrl: initialUrl,
+            finalUrl,
+          };
 
           await collectPhaseArtifacts({phase: 'stopSensitiveInstrumentation', ...phaseOptions});
           await collectPhaseArtifacts({phase: 'stopInstrumentation', ...phaseOptions});

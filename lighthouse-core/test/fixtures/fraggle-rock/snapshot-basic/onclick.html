@@ -32,6 +32,7 @@
 
     document.addEventListener('click', () => {
       addTemplate('#violations');
+      this.location.hash = 'done';
       console.error('Accessibility violations added!');
     });
 

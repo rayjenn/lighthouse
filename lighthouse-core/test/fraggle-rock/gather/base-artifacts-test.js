@@ -65,7 +65,7 @@ describe('finalizeArtifacts', () => {
     const {config} = initializeConfig(undefined, {gatherMode});
     const driver = getMockDriverForArtifacts().asDriver();
     baseArtifacts = await getBaseArtifacts(config, driver, {gatherMode});
-    baseArtifacts.URL = {requestedUrl: 'http://example.com', finalUrl: 'https://example.com'};
+    baseArtifacts.URL = {initialUrl: 'about:blank', requestedUrl: 'http://example.com', finalUrl: 'https://example.com'};
     gathererArtifacts = {};
   });
 
@@ -133,20 +133,23 @@ describe('finalizeArtifacts', () => {
   it('should throw if URL was not set', () => {
     const run = () => finalizeArtifacts(baseArtifacts, gathererArtifacts);
 
-    baseArtifacts.URL = {requestedUrl: '', finalUrl: ''};
+    baseArtifacts.URL = {initialUrl: 'about:blank', requestedUrl: '', finalUrl: ''};
     expect(run).toThrowError(/requestedUrl/);
 
-    baseArtifacts.URL = {requestedUrl: '', finalUrl: 'https://example.com'};
+    baseArtifacts.URL = {initialUrl: '', requestedUrl: '', finalUrl: ''};
+    expect(run).toThrowError(/initialUrl/);
+
+    baseArtifacts.URL = {initialUrl: 'about:blank', requestedUrl: '', finalUrl: 'https://example.com'};
     expect(run).toThrowError(/requestedUrl/);
 
-    baseArtifacts.URL = {requestedUrl: 'https://example.com', finalUrl: ''};
+    baseArtifacts.URL = {initialUrl: 'about:blank', requestedUrl: 'https://example.com', finalUrl: ''};
     expect(run).toThrowError(/finalUrl/);
   });
 
   it('should not throw if URL was not set for an error reason', () => {
     const run = () => finalizeArtifacts(baseArtifacts, gathererArtifacts);
 
-    baseArtifacts.URL = {requestedUrl: 'http://example.com', finalUrl: ''};
+    baseArtifacts.URL = {initialUrl: 'about:blank', requestedUrl: 'http://example.com', finalUrl: ''};
     baseArtifacts.PageLoadError = new LighthouseError(LighthouseError.errors.PAGE_HUNG);
     expect(run).not.toThrowError(/requestedUrl/);
   });

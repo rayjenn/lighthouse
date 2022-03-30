@@ -6,21 +6,17 @@ on:
   pull_request: # run on all PRs, not just PRs to a particular branch
 
 jobs:
-  # `smoke` runs as a matrix across 4 jobs:
-  #  * The smoke tests are split into two batches, to parallelize.
+  # `smoke` runs as a matrix across 6 jobs:
+  #  * The smoke tests are split into 3 batches, to parallelize.
   #  * Then, those are run with both Chrome stable and ToT Chromium, in parallel
   smoke:
     strategy:
       matrix:
         chrome-channel: ['stable', 'ToT']
-        smoke-test-shard: [1, 2]
+        smoke-test-shard: [1, 2, 3]
       # e.g. if set 1 fails, continue with set 2 anyway
       fail-fast: false
     runs-on: ubuntu-latest
-    env:
-      # The total number of shards. Set dynamically when length of single matrix variable is
-      # computable. See https://github.community/t/get-length-of-strategy-matrix-or-get-all-matrix-options/18342
-      SHARD_TOTAL: 2
     # Job named e.g. "Chrome stable, batch 1".
     name: Chrome ${{ matrix.chrome-channel }}, batch ${{ matrix.smoke-test-shard }}
 
@@ -53,7 +49,7 @@ jobs:
     - run: sudo apt-get install xvfb
     - name: Run smoke tests
       run: |
-        xvfb-run --auto-servernum yarn c8 yarn smoke --debug -j=1 --retries=2 --shard=${{ matrix.smoke-test-shard }}/$SHARD_TOTAL
+        xvfb-run --auto-servernum yarn c8 yarn smoke --debug -j=1 --retries=2 --shard=${{ matrix.smoke-test-shard }}/${{ strategy.job-total }}
         yarn c8 report --reporter text-lcov > smoke-coverage.lcov
 
     - name: Upload test coverage to Codecov

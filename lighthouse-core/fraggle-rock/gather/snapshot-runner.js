@@ -36,8 +36,12 @@ async function snapshotGather(options) {
   const artifacts = await Runner.gather(
     async () => {
       const baseArtifacts = await getBaseArtifacts(config, driver, {gatherMode: 'snapshot'});
-      baseArtifacts.URL.requestedUrl = url;
-      baseArtifacts.URL.finalUrl = url;
+      baseArtifacts.URL = {
+        initialUrl: url,
+        // TODO: Remove `requestedUrl` from snapshot mode.
+        requestedUrl: url,
+        finalUrl: url,
+      };
 
       const artifactDefinitions = config.artifacts || [];
       const artifactState = getEmptyArtifactState();

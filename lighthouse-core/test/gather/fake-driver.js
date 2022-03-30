@@ -84,6 +84,9 @@ function makeFakeDriver({protocolGetVersionResponse}) {
     registerRequestIdleCallbackWrap() {
       return Promise.resolve();
     },
+    url() {
+      return Promise.resolve('about:blank');
+    },
   };
 }
 

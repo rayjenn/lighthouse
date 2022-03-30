@@ -158,7 +158,6 @@ class UnusedBytes extends Audit {
 
     const simulationBeforeChanges = simulator.simulate(graph, {label: beforeLabel});
 
-    // TODO: change this to wastedBytesByScriptId
     const wastedBytesByUrl = options.providedWastedBytesByUrl || new Map();
     if (!options.providedWastedBytesByUrl) {
       for (const {url, wastedBytes} of results) {

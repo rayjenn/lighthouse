@@ -78,6 +78,9 @@ class EmulationDriver extends Driver {
   getImportantStorageWarning() {
     return Promise.resolve(undefined);
   }
+  url() {
+    return Promise.resolve('about:blank');
+  }
 }
 
 const fakeDriver = require('./fake-driver.js');
@@ -132,7 +135,7 @@ beforeEach(() => {
 
   const navigation = jest.requireMock('../../gather/driver/navigation.js');
   navigation.gotoURL = jest.fn().mockResolvedValue({
-    finalUrl: 'https://example.com',
+    mainDocumentUrl: 'https://example.com',
     timedOut: false,
     warnings: [],
   });
@@ -149,7 +152,7 @@ describe('GatherRunner', function() {
     const url2 = 'https://example.com/interstitial';
     const driver = {};
     const gotoURL = jest.requireMock('../../gather/driver/navigation.js').gotoURL;
-    gotoURL.mockResolvedValue({finalUrl: url2, warnings: []});
+    gotoURL.mockResolvedValue({mainDocumentUrl: url2, warnings: []});
 
     const passContext = {
       url: url1,
@@ -192,7 +195,7 @@ describe('GatherRunner', function() {
   it('collects benchmark as an artifact', async () => {
     const requestedUrl = 'https://example.com';
     const driver = fakeDriver;
-    const config = makeConfig({passes: []});
+    const config = makeConfig({passes: [{passName: 'defaultPass'}]});
     const options = {requestedUrl, driver, settings: config.settings, computedCache: new Map()};
 
     const results = await GatherRunner.run(config.passes, options);
@@ -202,7 +205,7 @@ describe('GatherRunner', function() {
   it('collects host user agent as an artifact', async () => {
     const requestedUrl = 'https://example.com';
     const driver = fakeDriver;
-    const config = makeConfig({passes: []});
+    const config = makeConfig({passes: [{passName: 'defaultPass'}]});
     const options = {requestedUrl, driver, settings: config.settings, computedCache: new Map()};
 
     const results = await GatherRunner.run(config.passes, options);
@@ -222,9 +225,9 @@ describe('GatherRunner', function() {
 
   it('collects requested and final URLs as an artifact', () => {
     const requestedUrl = 'https://example.com';
-    const finalUrl = 'https://example.com/interstitial';
+    const mainDocumentUrl = 'https://example.com/interstitial';
     const gotoURL = jest.requireMock('../../gather/driver/navigation.js').gotoURL;
-    gotoURL.mockResolvedValue({finalUrl, timedOut: false, warnings: []});
+    gotoURL.mockResolvedValue({mainDocumentUrl, timedOut: false, warnings: []});
     const config = makeConfig({passes: [{passName: 'defaultPass'}]});
     const options = {
       requestedUrl,
@@ -234,7 +237,9 @@ describe('GatherRunner', function() {
     };
 
     return GatherRunner.run(config.passes, options).then(artifacts => {
-      assert.deepStrictEqual(artifacts.URL, {requestedUrl, finalUrl},
+      assert.deepStrictEqual(
+        artifacts.URL,
+        {initialUrl: 'about:blank', requestedUrl, mainDocumentUrl, finalUrl: mainDocumentUrl},
         'did not find expected URL artifact');
     });
   });
@@ -255,7 +260,7 @@ describe('GatherRunner', function() {
           },
         });
         const config = makeConfig({
-          passes: [],
+          passes: [{passName: 'defaultPass'}],
           settings: {},
         });
         const options = {requestedUrl, driver, settings: config.settings, computedCache: new Map()};
@@ -522,7 +527,7 @@ describe('GatherRunner', function() {
 
     const gotoUrlForAboutBlank = jest.fn().mockResolvedValue({});
     const gotoUrlForRealUrl = jest.fn()
-      .mockResolvedValueOnce({finalUrl: requestedUrl, timedOut: false, warnings: []})
+      .mockResolvedValueOnce({mainDocumentUrl: requestedUrl, timedOut: false, warnings: []})
       .mockRejectedValueOnce(navigationError);
     const driver = Object.assign({}, fakeDriver, {
       online: true,
@@ -816,7 +821,7 @@ describe('GatherRunner', function() {
         if (url.includes('blank')) return null;
         if (firstLoad) {
           firstLoad = false;
-          return {finalUrl: requestedUrl, timedOut: false, warnings: []};
+          return {mainDocumentUrl: requestedUrl, timedOut: false, warnings: []};
         } else {
           throw new LHError(LHError.errors.NO_FCP);
         }
@@ -1218,7 +1223,7 @@ describe('GatherRunner', function() {
       });
 
       const gotoURL = jest.requireMock('../../gather/driver/navigation.js').gotoURL;
-      gotoURL.mockResolvedValue({finalUrl: requestedUrl, warnings: ['It is too slow']});
+      gotoURL.mockResolvedValue({mainDocumentUrl: requestedUrl, warnings: ['It is too slow']});
 
       return GatherRunner.run(config.passes, {
         driver: timedoutDriver,

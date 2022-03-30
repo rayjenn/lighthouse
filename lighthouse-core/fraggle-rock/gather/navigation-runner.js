@@ -44,17 +44,16 @@ const NetworkRecords = require('../../computed/network-records.js');
 /** @typedef {Omit<Parameters<typeof collectPhaseArtifacts>[0], 'phase'>} PhaseState */
 
 /**
- * @param {{driver: Driver, config: LH.Config.FRConfig, requestor: LH.NavigationRequestor, options?: InternalOptions}} args
+ * @param {{driver: Driver, config: LH.Config.FRConfig, options?: InternalOptions}} args
  * @return {Promise<{baseArtifacts: LH.FRBaseArtifacts}>}
  */
-async function _setup({driver, config, requestor, options}) {
+async function _setup({driver, config, options}) {
   await driver.connect();
   if (!options?.skipAboutBlank) {
     await gotoURL(driver, defaultNavigationConfig.blankPage, {waitUntil: ['navigated']});
   }
 
   const baseArtifacts = await getBaseArtifacts(config, driver, {gatherMode: 'navigation'});
-  if (typeof requestor === 'string') baseArtifacts.URL.requestedUrl = requestor;
 
   await prepare.prepareTargetForNavigationMode(driver, config.settings);
 
@@ -90,25 +89,32 @@ async function _cleanupNavigation({driver}) {
 
 /**
  * @param {NavigationContext} navigationContext
- * @return {Promise<{requestedUrl: string, finalUrl: string, navigationError: LH.LighthouseError | undefined, warnings: Array<LH.IcuMessage>}>}
+ * @return {Promise<{requestedUrl: string, mainDocumentUrl: string, navigationError: LH.LighthouseError | undefined, warnings: Array<LH.IcuMessage>}>}
  */
 async function _navigate(navigationContext) {
   const {driver, config, requestor} = navigationContext;
 
   try {
-    const {requestedUrl, finalUrl, warnings} = await gotoURL(driver, requestor, {
+    const {requestedUrl, mainDocumentUrl, warnings} = await gotoURL(driver, requestor, {
       ...navigationContext.navigation,
       debugNavigation: config.settings.debugNavigation,
       maxWaitForFcp: config.settings.maxWaitForFcp,
       maxWaitForLoad: config.settings.maxWaitForLoad,
       waitUntil: navigationContext.navigation.pauseAfterFcpMs ? ['fcp', 'load'] : ['load'],
     });
-    return {requestedUrl, finalUrl, navigationError: undefined, warnings};
+    return {requestedUrl, mainDocumentUrl, navigationError: undefined, warnings};
   } catch (err) {
     if (!(err instanceof LighthouseError)) throw err;
     if (err.code !== 'NO_FCP' && err.code !== 'PAGE_HUNG') throw err;
     if (typeof requestor !== 'string') throw err;
-    return {requestedUrl: requestor, finalUrl: requestor, navigationError: err, warnings: []};
+
+    // TODO: Make the urls optional here so we don't need to throw an error with a callback requestor.
+    return {
+      requestedUrl: requestor,
+      mainDocumentUrl: requestor,
+      navigationError: err,
+      warnings: [],
+    };
   }
 }
 
@@ -152,7 +158,7 @@ async function _collectDebugData(navigationContext, phaseState) {
  * @param {PhaseState} phaseState
  * @param {Awaited<ReturnType<typeof _setupNavigation>>} setupResult
  * @param {Awaited<ReturnType<typeof _navigate>>} navigateResult
- * @return {Promise<{requestedUrl: string, finalUrl: string, artifacts: Partial<LH.GathererArtifacts>, warnings: Array<LH.IcuMessage>, pageLoadError: LH.LighthouseError | undefined}>}
+ * @return {Promise<{artifacts: Partial<LH.GathererArtifacts>, warnings: Array<LH.IcuMessage>, pageLoadError: LH.LighthouseError | undefined}>}
  */
 async function _computeNavigationResult(
   navigationContext,
@@ -160,12 +166,12 @@ async function _computeNavigationResult(
   setupResult,
   navigateResult
 ) {
-  const {navigationError, finalUrl} = navigateResult;
+  const {navigationError, mainDocumentUrl} = navigateResult;
   const warnings = [...setupResult.warnings, ...navigateResult.warnings];
   const debugData = await _collectDebugData(navigationContext, phaseState);
   const pageLoadError = debugData.records
     ? getPageLoadError(navigationError, {
-      url: finalUrl,
+      url: mainDocumentUrl,
       loadFailureMode: navigationContext.navigation.loadFailureMode,
       networkRecords: debugData.records,
     })
@@ -183,8 +189,6 @@ async function _computeNavigationResult(
     if (debugData.trace) artifacts.traces = {[pageLoadErrorId]: debugData.trace};
 
     return {
-      requestedUrl: navigateResult.requestedUrl,
-      finalUrl,
       pageLoadError,
       artifacts,
       warnings: [...warnings, pageLoadError.friendlyMessage],
@@ -194,8 +198,6 @@ async function _computeNavigationResult(
 
     const artifacts = await awaitArtifacts(phaseState.artifactState);
     return {
-      requestedUrl: navigateResult.requestedUrl,
-      finalUrl,
       artifacts,
       warnings,
       pageLoadError: undefined,
@@ -209,8 +211,9 @@ async function _computeNavigationResult(
  */
 async function _navigation(navigationContext) {
   const artifactState = getEmptyArtifactState();
+  const initialUrl = await navigationContext.driver.url();
   const phaseState = {
-    url: await navigationContext.driver.url(),
+    url: initialUrl,
     gatherMode: /** @type {const} */ ('navigation'),
     driver: navigationContext.driver,
     computedCache: navigationContext.computedCache,
@@ -224,8 +227,20 @@ async function _navigation(navigationContext) {
   await collectPhaseArtifacts({phase: 'startInstrumentation', ...phaseState});
   await collectPhaseArtifacts({phase: 'startSensitiveInstrumentation', ...phaseState});
   const navigateResult = await _navigate(navigationContext);
-  phaseState.baseArtifacts.URL.finalUrl = navigateResult.finalUrl;
-  phaseState.url = navigateResult.finalUrl;
+
+  // Every required url is initialized to an empty string in `getBaseArtifacts`.
+  // If we haven't set the required urls yet, set them here.
+  const {URL} = phaseState.baseArtifacts;
+  if (!URL.finalUrl || !URL.initialUrl) {
+    phaseState.baseArtifacts.URL = {
+      initialUrl,
+      requestedUrl: navigateResult.requestedUrl,
+      mainDocumentUrl: navigateResult.mainDocumentUrl,
+      finalUrl: navigateResult.mainDocumentUrl,
+    };
+  }
+  phaseState.url = navigateResult.mainDocumentUrl;
+
   await collectPhaseArtifacts({phase: 'stopSensitiveInstrumentation', ...phaseState});
   await collectPhaseArtifacts({phase: 'stopInstrumentation', ...phaseState});
   await _cleanupNavigation(navigationContext);
@@ -263,11 +278,6 @@ async function _navigations({driver, config, requestor, baseArtifacts, computedC
         artifacts.PageLoadError = navigationResult.pageLoadError;
         shouldHaltNavigations = true;
       }
-
-      artifacts.URL = {
-        requestedUrl: navigationResult.requestedUrl,
-        finalUrl: navigationResult.finalUrl,
-      };
     }
 
     LighthouseRunWarnings.push(...navigationResult.warnings);

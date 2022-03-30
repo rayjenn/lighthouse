@@ -77,7 +77,11 @@ describe('Snapshot Runner', () => {
     const artifacts = await mockRunner.gather.mock.calls[0][0]();
     expect(artifacts).toMatchObject({
       fetchTime: expect.any(String),
-      URL: {finalUrl: 'https://lighthouse.example.com/'},
+      URL: {
+        initialUrl: 'https://lighthouse.example.com/',
+        requestedUrl: 'https://lighthouse.example.com/',
+        finalUrl: 'https://lighthouse.example.com/',
+      },
     });
   });
 

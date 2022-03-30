@@ -164,7 +164,7 @@ class DuplicatedJavascript extends ByteEfficiencyAudit {
         let transferRatio = transferRatioByUrl.get(url);
         if (transferRatio === undefined) {
           if (!script || script.length === undefined) {
-            // This should never happen because we found the wasted bytes from bundles, which required contents in a ScriptElement.
+            // This should never happen because we found the wasted bytes from bundles, which required contents in a Script.
             continue;
           }
 

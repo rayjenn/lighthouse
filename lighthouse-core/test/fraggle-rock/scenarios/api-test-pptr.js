@@ -41,7 +41,15 @@ describe('Fraggle Rock API', () => {
       const result = await lighthouse.snapshot({page: state.page});
       if (!result) throw new Error('Lighthouse failed to produce a result');
 
-      const {lhr} = result;
+      const {lhr, artifacts} = result;
+      const url = `${state.serverBaseUrl}/onclick.html#done`;
+      expect(artifacts.URL).toEqual({
+        initialUrl: url,
+        // TODO: Remove `requestedUrl` in snapshot mode
+        requestedUrl: url,
+        finalUrl: url,
+      });
+
       const accessibility = lhr.categories.accessibility;
       expect(accessibility.score).toBeLessThan(1);
 
@@ -68,7 +76,14 @@ describe('Fraggle Rock API', () => {
       const result = await run.endTimespan();
       if (!result) throw new Error('Lighthouse failed to produce a result');
 
-      const {lhr} = result;
+      const {lhr, artifacts} = result;
+      expect(artifacts.URL).toEqual({
+        initialUrl: 'about:blank',
+        // TODO: Remove `requestedUrl` in timespan mode
+        requestedUrl: 'about:blank',
+        finalUrl: `${state.serverBaseUrl}/onclick.html#done`,
+      });
+
       const bestPractices = lhr.categories['best-practices'];
       expect(bestPractices.score).toBeLessThan(1);
 
@@ -109,7 +124,8 @@ describe('Fraggle Rock API', () => {
 
     it('should compute results from timespan after page load', async () => {
       const {page, serverBaseUrl} = state;
-      await page.goto(`${serverBaseUrl}/onclick.html`);
+      const initialUrl = `${serverBaseUrl}/onclick.html`;
+      await page.goto(initialUrl);
       await page.waitForSelector('button');
 
       const run = await lighthouse.startTimespan({page});
@@ -120,6 +136,13 @@ describe('Fraggle Rock API', () => {
       const result = await run.endTimespan();
 
       if (!result) throw new Error('Lighthouse failed to produce a result');
+
+      expect(result.artifacts.URL).toEqual({
+        initialUrl,
+        // TODO: Remove `requestedUrl` in timespan mode
+        requestedUrl: initialUrl,
+        finalUrl: `${initialUrl}#done`,
+      });
 
       const {auditResults, erroredAudits, notApplicableAudits} = getAuditsBreakdown(result.lhr);
       expect(auditResults.length).toMatchInlineSnapshot(`44`);
@@ -139,10 +162,18 @@ describe('Fraggle Rock API', () => {
 
     it('should compute both snapshot & timespan results', async () => {
       const {page, serverBaseUrl} = state;
-      const result = await lighthouse.navigation(`${serverBaseUrl}/index.html`, {page});
+      const url = `${serverBaseUrl}/index.html`;
+      const result = await lighthouse.navigation(url, {page});
       if (!result) throw new Error('Lighthouse failed to produce a result');
 
-      const {lhr} = result;
+      const {lhr, artifacts} = result;
+      expect(artifacts.URL).toEqual({
+        initialUrl: 'about:blank',
+        requestedUrl: url,
+        mainDocumentUrl: url,
+        finalUrl: url,
+      });
+
       const {auditResults, failedAudits, erroredAudits} = getAuditsBreakdown(lhr);
       // TODO(FR-COMPAT): This assertion can be removed when full compatibility is reached.
       expect(auditResults.length).toMatchInlineSnapshot(`152`);
@@ -156,7 +187,7 @@ describe('Fraggle Rock API', () => {
       expect(lhr.audits).toHaveProperty('total-byte-weight');
       const details = lhr.audits['total-byte-weight'].details;
       if (!details || details.type !== 'table') throw new Error('Unexpected byte weight details');
-      expect(details.items).toMatchObject([{url: `${serverBaseUrl}/index.html`}]);
+      expect(details.items).toMatchObject([{url}]);
 
       // Check that performance metrics were computed.
       expect(lhr.audits).toHaveProperty('first-contentful-paint');
@@ -165,7 +196,10 @@ describe('Fraggle Rock API', () => {
 
     it('should compute results with callback requestor', async () => {
       const {page, serverBaseUrl} = state;
-      await page.goto(`${serverBaseUrl}/links-to-index.html`);
+      const initialUrl = `${serverBaseUrl}/links-to-index.html`;
+      const requestedUrl = `${serverBaseUrl}/?redirect=/index.html`;
+      const mainDocumentUrl = `${serverBaseUrl}/index.html`;
+      await page.goto(initialUrl);
 
       const requestor = jest.fn(async () => {
         await page.click('a');
@@ -176,9 +210,15 @@ describe('Fraggle Rock API', () => {
 
       expect(requestor).toHaveBeenCalled();
 
-      const {lhr} = result;
-      expect(lhr.requestedUrl).toEqual(`${serverBaseUrl}/index.html`);
-      expect(lhr.finalUrl).toEqual(`${serverBaseUrl}/index.html`);
+      const {lhr, artifacts} = result;
+      expect(lhr.requestedUrl).toEqual(requestedUrl);
+      expect(lhr.finalUrl).toEqual(mainDocumentUrl);
+      expect(artifacts.URL).toEqual({
+        initialUrl,
+        requestedUrl,
+        mainDocumentUrl,
+        finalUrl: mainDocumentUrl,
+      });
 
       const {auditResults, failedAudits, erroredAudits} = getAuditsBreakdown(lhr);
       // TODO(FR-COMPAT): This assertion can be removed when full compatibility is reached.
@@ -193,7 +233,10 @@ describe('Fraggle Rock API', () => {
       expect(lhr.audits).toHaveProperty('total-byte-weight');
       const details = lhr.audits['total-byte-weight'].details;
       if (!details || details.type !== 'table') throw new Error('Unexpected byte weight details');
-      expect(details.items).toMatchObject([{url: `${serverBaseUrl}/index.html`}]);
+      expect(details.items).toMatchObject([
+        {url: mainDocumentUrl},
+        {url: `${serverBaseUrl}/?redirect=/index.html`},
+      ]);
 
       // Check that performance metrics were computed.
       expect(lhr.audits).toHaveProperty('first-contentful-paint');

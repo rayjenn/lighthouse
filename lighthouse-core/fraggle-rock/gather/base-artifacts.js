@@ -35,7 +35,12 @@ async function getBaseArtifacts(config, driver, context) {
     HostFormFactor: userAgent.includes('Android') || userAgent.includes('Mobile') ?
       'mobile' : 'desktop',
     // Contextual artifacts whose collection changes based on gather mode.
-    URL: {requestedUrl: '', finalUrl: ''},
+    // TODO: Make `requestedUrl` optional in timespan and snapshot modes.
+    URL: {
+      initialUrl: '',
+      requestedUrl: '',
+      finalUrl: '',
+    },
     PageLoadError: null,
     GatherContext: context,
     // Artifacts that have been replaced by regular gatherers in Fraggle Rock.
@@ -87,6 +92,8 @@ function finalizeArtifacts(baseArtifacts, gathererArtifacts) {
   }
 
   // Check that the runner remembered to mutate the special-case URL artifact.
+  // TODO: Make `requestedUrl` optional.
+  if (!artifacts.URL.initialUrl) throw new Error('Runner did not set initialUrl');
   if (!artifacts.URL.requestedUrl) throw new Error('Runner did not set requestedUrl');
   if (!artifacts.URL.finalUrl) throw new Error('Runner did not set finalUrl');
 

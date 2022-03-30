@@ -21,15 +21,12 @@ SKIP_DOWNLOADS=1 yarn test-devtools
 ### Prerequistes
 
 <details>
-  <summary> Install `requests`</summary>
+  <summary>Install python dependencies</summary>
 
-  Ensure you have `requests` module available globally on your python 2.7 install. New Macs do not come with pip for python 2.7 which is deprecated, so you might have to install that too.
-
+  Ensure you have these modules available globally on your python 3.x install:
 
   ```sh
-  curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
-  python get-pip.py
-  pip -m pip install requests
+  python3 -m pip install requests six
   ```
 
 </details>
@@ -108,7 +105,7 @@ yarn run-devtools http://example.com
 
 #### How to modify blink-tools.patch?
 
-Simply make your changes in `.tmp/chromium-web-tests/blink_tools`, and run: `git -C .tmp/chromium-web-tests/blink_tools diff > lighthouse-core/test/chromium-web-tests/blink-tools.patch`
+Simply make your changes in `.tmp/chromium-web-tests/blink_tools/latest`, and run: `git -C .tmp/chromium-web-tests/blink_tools/latest diff > lighthouse-core/test/chromium-web-tests/blink-tools.patch`
 
 #### How does the python module `typ` get added to python sys path?
 

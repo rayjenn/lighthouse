@@ -277,21 +277,21 @@ class LegacyJavascript extends ByteEfficiencyAudit {
    * @param {LH.Artifacts['Scripts']} scripts
    * @param {LH.Artifacts.NetworkRequest[]} networkRecords
    * @param {LH.Artifacts.Bundle[]} bundles
-   * @return {Map<string, PatternMatchResult[]>}
+   * @return {Map<LH.Artifacts.Script, PatternMatchResult[]>}
    */
   static detectAcrossScripts(matcher, scripts, networkRecords, bundles) {
-    /** @type {Map<string, PatternMatchResult[]>} */
-    const urlToMatchResults = new Map();
+    /** @type {Map<LH.Artifacts.Script, PatternMatchResult[]>} */
+    const scriptToMatchResults = new Map();
     const polyfillData = this.getPolyfillData();
 
-    for (const {scriptId, url, content} of Object.values(scripts)) {
-      if (!content) continue;
+    for (const script of Object.values(scripts)) {
+      if (!script.content) continue;
 
       // Start with pattern matching against the downloaded script.
-      const matches = matcher.match(content);
+      const matches = matcher.match(script.content);
 
       // If it's a bundle with source maps, add in the polyfill modules by name too.
-      const bundle = bundles.find(b => b.script.scriptId === scriptId);
+      const bundle = bundles.find(b => b.script.scriptId === script.scriptId);
       if (bundle) {
         for (const {coreJs2Module, coreJs3Module, name} of polyfillData) {
           // Skip if the pattern matching found a match for this polyfill.
@@ -311,11 +311,10 @@ class LegacyJavascript extends ByteEfficiencyAudit {
       }
 
       if (!matches.length) continue;
-      // TODO: scriptId
-      urlToMatchResults.set(url, matches);
+      scriptToMatchResults.set(script, matches);
     }
 
-    return urlToMatchResults;
+    return scriptToMatchResults;
   }
 
   /**
@@ -410,15 +409,15 @@ class LegacyJavascript extends ByteEfficiencyAudit {
     /** @type {Map<string, number>} */
     const transferRatioByUrl = new Map();
 
-    const urlToMatchResults =
+    const scriptToMatchResults =
       this.detectAcrossScripts(matcher, artifacts.Scripts, networkRecords, bundles);
-    for (const [url, matches] of urlToMatchResults.entries()) {
+    for (const [script, matches] of scriptToMatchResults.entries()) {
       const transferRatio = await this.estimateTransferRatioForScript(
-        transferRatioByUrl, url, artifacts, networkRecords);
+        transferRatioByUrl, script.url, artifacts, networkRecords);
       const wastedBytes = Math.round(this.estimateWastedBytes(matches) * transferRatio);
       /** @type {typeof items[number]} */
       const item = {
-        url,
+        url: script.url,
         wastedBytes,
         subItems: {
           type: 'subitems',
@@ -428,13 +427,13 @@ class LegacyJavascript extends ByteEfficiencyAudit {
         totalBytes: 0,
       };
 
-      const bundle = bundles.find(bundle => bundle.script.url === url); // TODO: scriptId
+      const bundle = bundles.find(bundle => bundle.script.scriptId === script.scriptId);
       for (const match of matches) {
         const {name, line, column} = match;
         /** @type {SubItem} */
         const subItem = {
           signal: name,
-          location: ByteEfficiencyAudit.makeSourceLocation(url, line, column, bundle),
+          location: ByteEfficiencyAudit.makeSourceLocation(script.url, line, column, bundle),
         };
         item.subItems.items.push(subItem);
       }

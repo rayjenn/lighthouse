@@ -8,6 +8,11 @@
 
 set -euo pipefail
 
+if ! type -P python3; then
+  echo "python3 could not be found"
+  exit 1
+fi
+
 # Get newest folder
 latest_content_shell_dir=$(ls -t "$LH_ROOT/.tmp/chromium-web-tests/content-shells/" | head -n1)
 export latest_content_shell="$LH_ROOT/.tmp/chromium-web-tests/content-shells/$latest_content_shell_dir"
@@ -49,7 +54,7 @@ set +e
 # Print the python command.
 set -x
 
-python \
+python3 \
   "$BLINK_TOOLS_PATH/latest/third_party/blink/tools/run_web_tests.py" \
   --layout-tests-directory="$DEVTOOLS_PATH/test/webtests" \
   --build-directory="$latest_content_shell/out" \

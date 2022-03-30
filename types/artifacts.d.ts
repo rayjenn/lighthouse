@@ -66,7 +66,7 @@ interface UniversalBaseArtifacts {
  */
 interface ContextualBaseArtifacts {
   /** The URL initially requested and the post-redirects URL that was actually loaded. */
-  URL: {requestedUrl: string, finalUrl: string};
+  URL: Artifacts.URL;
   /** If loading the page failed, value is the error that caused it. Otherwise null. */
   PageLoadError: LighthouseError | null;
 }
@@ -187,6 +187,28 @@ declare module Artifacts {
   type TaskNode = _TaskNode;
   type MetaElement = Artifacts['MetaElements'][0];
 
+  interface URL {
+    /** URL of the main frame before Lighthouse starts. */
+    initialUrl: string;
+    /**
+     * URL of the first document request during a Lighthouse navigation.
+     * Will be the same as `initialUrl` in timespan/snapshot.
+     * TODO: Make this property `undefined` in timespan/snapshot.
+     */
+    requestedUrl: string;
+    /**
+     * URL of the last document request during a Lighthouse navigation.
+     * Will be `undefined` in timespan/snapshot.
+     */
+    mainDocumentUrl?: string;
+    /**
+     * Will be the same as `mainDocumentUrl` in navigation mode.
+     * Wil be the URL of the main frame after Lighthouse finishes in timespan/snapshot.
+     * TODO: Use the main frame URL in navigation mode as well.
+     */
+    finalUrl: string;
+  }
+
   interface NodeDetails {
     lhId: string,
     devtoolsNodePath: string,
@@ -299,7 +321,7 @@ declare module Artifacts {
     url: string;
     content?: string;
   }
-  
+
   interface ScriptElement {
     type: string | null
     src: string | null

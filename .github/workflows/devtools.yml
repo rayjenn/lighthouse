@@ -105,7 +105,7 @@ jobs:
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/download-content-shell.sh
 
     - name: Install python deps
-      run: pip install six requests
+      run: python3 -m pip install six requests
 
     - name: Run Web Tests
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/run-web-tests.sh
@@ -121,7 +121,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        smoke-test-shard: [1, 2]
+        smoke-test-shard: [1, 2, 3]
       # e.g. if set 1 fails, continue with set 2 anyway
       fail-fast: false
     runs-on: macos-latest

@@ -30,8 +30,7 @@ const args = yargs(process.argv.slice(2))
       default: false,
     },
     'rebaseline-artifacts': {
-      type: 'boolean',
-      default: false,
+      type: 'array',
     },
     'output-path': {
       type: 'string',
@@ -77,7 +76,10 @@ const config = {
   },
 };
 
-async function rebaselineArtifacts() {
+/**
+ * @param {(string|number)[]} artifactKeys
+ */
+async function rebaselineArtifacts(artifactKeys) {
   const browser = await puppeteer.launch({
     ignoreDefaultArgs: ['--enable-automation'],
     executablePath: process.env.CHROME_PATH,
@@ -103,11 +105,25 @@ async function rebaselineArtifacts() {
 
   await browser.close();
 
-  const flowArtifacts = flow.createArtifactsJson();
+  let flowArtifacts = flow.createArtifactsJson();
 
   // Normalize some data so it doesn't change on every update.
   for (const {artifacts} of flowArtifacts.gatherSteps) {
     assetSaver.normalizeTimingEntries(artifacts.Timing);
+  }
+
+  if (artifactKeys.length) {
+    const newFlowArtifacts = flowArtifacts;
+    flowArtifacts = JSON.parse(fs.readFileSync(ARTIFACTS_PATH, 'utf-8'));
+    for (let i = 0; i < flowArtifacts.gatherSteps.length; ++i) {
+      const gatherStep = flowArtifacts.gatherSteps[i];
+      const newGatherStep = newFlowArtifacts.gatherSteps[i];
+      for (const key of artifactKeys) {
+        // @ts-expect-error
+        gatherStep.artifacts[key] = newGatherStep.artifacts[key];
+      }
+      flowArtifacts.gatherSteps[i] = gatherStep;
+    }
   }
 
   fs.writeFileSync(ARTIFACTS_PATH, JSON.stringify(flowArtifacts, null, 2));
@@ -136,7 +152,7 @@ async function generateFlowResult() {
 (async () => {
   try {
     if (args.rebaselineArtifacts) {
-      await rebaselineArtifacts();
+      await rebaselineArtifacts(args.rebaselineArtifacts);
     }
     await generateFlowResult();
   } catch (err) {

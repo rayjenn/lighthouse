@@ -268,7 +268,7 @@ class RenderBlockingResources extends Audit {
       for (const item of unusedCssItems) {
         wastedBytesByUrl.set(item.url, item.wastedBytes);
       }
-    } catch (_) {}
+    } catch {}
 
     return wastedBytesByUrl;
   }

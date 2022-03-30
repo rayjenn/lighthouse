@@ -80,7 +80,7 @@ function resolveWaitForFullyLoadedOptions(options) {
  * @param {LH.Gatherer.FRTransitionalDriver} driver
  * @param {LH.NavigationRequestor} requestor
  * @param {NavigationOptions} options
- * @return {Promise<{requestedUrl: string, finalUrl: string, warnings: Array<LH.IcuMessage>}>}
+ * @return {Promise<{requestedUrl: string, mainDocumentUrl: string, warnings: Array<LH.IcuMessage>}>}
  */
 async function gotoURL(driver, requestor, options) {
   const status = typeof requestor === 'string' ?
@@ -130,14 +130,14 @@ async function gotoURL(driver, requestor, options) {
 
   let requestedUrl = navigationUrls.requestedUrl;
   if (typeof requestor === 'string') {
-    if (requestor !== requestedUrl) {
+    if (requestedUrl && !URL.equalWithExcludedFragments(requestor, requestedUrl)) {
       log.error('Navigation', 'Provided URL did not match initial navigation URL');
     }
     requestedUrl = requestor;
   }
   if (!requestedUrl) throw Error('No navigations detected when running user defined requestor.');
 
-  const finalUrl = navigationUrls.finalUrl || requestedUrl;
+  const mainDocumentUrl = navigationUrls.mainDocumentUrl || requestedUrl;
 
   // Bring `Page.navigate` errors back into the promise chain. See https://github.com/GoogleChrome/lighthouse/pull/6739.
   await waitForNavigationTriggered;
@@ -150,26 +150,26 @@ async function gotoURL(driver, requestor, options) {
   log.timeEnd(status);
   return {
     requestedUrl,
-    finalUrl,
-    warnings: getNavigationWarnings({timedOut, finalUrl, requestedUrl}),
+    mainDocumentUrl,
+    warnings: getNavigationWarnings({timedOut, mainDocumentUrl, requestedUrl}),
   };
 }
 
 /**
- * @param {{timedOut: boolean, requestedUrl: string, finalUrl: string; }} navigation
+ * @param {{timedOut: boolean, requestedUrl: string, mainDocumentUrl: string; }} navigation
  * @return {Array<LH.IcuMessage>}
  */
 function getNavigationWarnings(navigation) {
-  const {requestedUrl, finalUrl} = navigation;
+  const {requestedUrl, mainDocumentUrl} = navigation;
   /** @type {Array<LH.IcuMessage>} */
   const warnings = [];
 
   if (navigation.timedOut) warnings.push(str_(UIStrings.warningTimeout));
 
-  if (!URL.equalWithExcludedFragments(requestedUrl, finalUrl)) {
+  if (!URL.equalWithExcludedFragments(requestedUrl, mainDocumentUrl)) {
     warnings.push(str_(UIStrings.warningRedirected, {
       requested: requestedUrl,
-      final: finalUrl,
+      final: mainDocumentUrl,
     }));
   }
 

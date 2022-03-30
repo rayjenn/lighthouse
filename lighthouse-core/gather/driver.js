@@ -470,6 +470,11 @@ class Driver {
     this._devtoolsLog.endRecording();
     return this._devtoolsLog.messages;
   }
+
+  async url() {
+    const {frameTree} = await this.sendCommand('Page.getFrameTree');
+    return `${frameTree.frame.url}${frameTree.frame.urlFragment || ''}`;
+  }
 }
 
 module.exports = Driver;

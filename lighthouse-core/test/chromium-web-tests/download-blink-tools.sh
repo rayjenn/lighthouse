@@ -13,9 +13,9 @@ set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # https://chromium.googlesource.com/chromium/src/
-commit_chromium="4ffbceb9e46813c0041c27d52fbcd180348ae073"
+commit_chromium="e1c3b88f73fcbff831485c0ca37f877bd22b7a02"
 # https://chromium.googlesource.com/catapult/
-commit_catapult="370c3d98a6db53222e9f36a4491a3757bb93e61a"
+commit_catapult="c2b4e773a8d77586ddea18b1962a3e02d19e682f"
 
 VERSIONED_DIR="$BLINK_TOOLS_PATH/$commit_chromium$commit_catapult"
 

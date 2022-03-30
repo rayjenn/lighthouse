@@ -266,7 +266,7 @@ function makeMocksForGatherRunner() {
   }));
   jest.mock('../gather/driver/navigation.js', () => ({
     gotoURL: jest.fn().mockResolvedValue({
-      finalUrl: 'http://example.com',
+      mainDocumentUrl: 'http://example.com',
       warnings: [],
     }),
   }));
