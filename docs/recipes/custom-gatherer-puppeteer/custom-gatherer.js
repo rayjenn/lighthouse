@@ -8,7 +8,7 @@
 /* global document */
 
 const Gatherer = require('lighthouse').Gatherer;
-const Puppeteer = require('puppeteer-core');
+const Puppeteer = require('puppeteer');
 
 async function connect(driver) {
   const browser = await Puppeteer.connect({
