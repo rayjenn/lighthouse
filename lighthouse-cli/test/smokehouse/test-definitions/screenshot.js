@@ -45,7 +45,7 @@ const expectations = {
       screenshot: {
         width: '>1000',
         height: '>1000',
-        data: /data:image\/jpeg;base64,.{10000,}$/,
+        data: /data:image\/webp;base64,.{10000,}$/,
       },
       nodes: {
         // Gathered with no execution context isolation, shared between both FR and legacy.

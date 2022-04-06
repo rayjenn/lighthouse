@@ -426,7 +426,7 @@ const expectations = {
             width: 360,
             // Allow for differences in platforms.
             height: '1350±100',
-            data: /^data:image\/jpeg;.{500,}/,
+            data: /^data:image\/webp;.{500,}/,
           },
           nodes: {
             // Test that the numbers for individual elements are in the ballpark.

@@ -15,6 +15,7 @@ const {waitForNetworkIdle} = require('../driver/wait-for-condition.js');
 
 // JPEG quality setting
 // Exploration and examples of reports using different quality settings: https://docs.google.com/document/d/1ZSffucIca9XDW2eEwfoevrk-OTl7WQFeMf0CgeJAA8M/edit#
+// Note: this analysis was done for JPEG, but now we use WEBP.
 const FULL_PAGE_SCREENSHOT_QUALITY = 30;
 
 /**
@@ -118,10 +119,10 @@ class FullPageScreenshot extends FRGatherer {
     await context.driver.executionContext.evaluate(waitForDoubleRaf, {args: []});
 
     const result = await session.sendCommand('Page.captureScreenshot', {
-      format: 'jpeg',
+      format: 'webp',
       quality: FULL_PAGE_SCREENSHOT_QUALITY,
     });
-    const data = 'data:image/jpeg;base64,' + result.data;
+    const data = 'data:image/webp;base64,' + result.data;
 
     return {
       data,
