@@ -132,6 +132,19 @@ export class I18n {
   }
 
   /**
+   * @param {number} size
+   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 1
+   * @return {string}
+   */
+  formatKbps(size, granularity = 1) {
+    return this._formatNumberWithGranularity(size, granularity, {
+      style: 'unit',
+      unit: 'kilobit-per-second',
+      unitDisplay: 'short',
+    });
+  }
+
+  /**
    * @param {number} ms
    * @param {number=} granularity Controls how coarse the displayed value is, defaults to 10
    * @return {string}
