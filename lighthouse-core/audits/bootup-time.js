@@ -204,7 +204,6 @@ class BootupTime extends Audit {
       totalBootupTime
     );
 
-
     return {
       score,
       numericValue: totalBootupTime,
