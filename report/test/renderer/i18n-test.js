@@ -104,9 +104,9 @@ describe('util helpers', () => {
 
   it('formats a duration', () => {
     const i18n = new I18n('en', {...Util.UIStrings});
-    assert.equal(i18n.formatDuration(60 * 1000), `1${NBSP}m`);
-    assert.equal(i18n.formatDuration(60 * 60 * 1000 + 5000), `1${NBSP}h 5${NBSP}s`);
-    assert.equal(i18n.formatDuration(28 * 60 * 60 * 1000 + 5000), `1${NBSP}d 4${NBSP}h 5${NBSP}s`);
+    assert.equal(i18n.formatDuration(60 * 1000), '1m');
+    assert.equal(i18n.formatDuration(60 * 60 * 1000 + 5000), '1h 5s');
+    assert.equal(i18n.formatDuration(28 * 60 * 60 * 1000 + 5000), '1d 4h 5s');
   });
 
   it('formats a duration based on locale', () => {
@@ -116,12 +116,13 @@ describe('util helpers', () => {
     assert.equal(
       i18n.formatDuration(28 * 60 * 60 * 1000 + 5000), `1${NBSP}T 4${NBSP}Std. 5${NBSP}Sek.`);
 
-    // idk?
+    // Yes, this is actually backwards (s h d).
     i18n = new I18n('ar', {...Util.UIStrings});
-    // assert.equal(i18n.formatDuration(60 * 1000), `1${NBSP}د`);
-    // assert.equal(i18n.formatDuration(60 * 60 * 1000 + 5000), `1${NBSP}س 5${NBSP}ث`);
-    // assert.equal(
-    //   i18n.formatDuration(28 * 60 * 60 * 1000 + 5000), `1${NBSP}T 4${NBSP}Std. 5${NBSP}Sek.`);
+    /* eslint-disable no-irregular-whitespace */
+    assert.equal(i18n.formatDuration(60 * 1000), `١${NBSP}د`);
+    assert.equal(i18n.formatDuration(60 * 60 * 1000 + 5000), `١${NBSP}س ٥${NBSP}ث`);
+    assert.equal(i18n.formatDuration(28 * 60 * 60 * 1000 + 5000), `١ ي ٤ س ٥ ث`);
+    /* eslint-enable no-irregular-whitespace */
   });
 
   it('formats numbers based on locale', () => {

@@ -207,27 +207,18 @@ export class I18n {
       minute: 60,
       second: 1,
     };
-    /** @type {Record<string, string>} */
-    const unitToDefaultLabel = {
-      day: 'd',
-      hour: 'h',
-      minute: 'm',
-      second: 's',
-    };
 
     Object.keys(unitToSecondsPer).forEach(unit => {
-      const unitFormatter = new Intl.NumberFormat(this._locale, {
-        style: 'unit',
-        unit,
-        unitDisplay: 'narrow',
-      });
-      const label = unitFormatter.formatToParts(0)
-        .find(p => p.type === 'unit')?.value || unitToDefaultLabel[unit];
       const secondsPerUnit = unitToSecondsPer[unit];
       const numberOfUnits = Math.floor(timeInSeconds / secondsPerUnit);
       if (numberOfUnits > 0) {
         timeInSeconds -= numberOfUnits * secondsPerUnit;
-        parts.push(`${numberOfUnits}${NBSP2}${label}`);
+        const part = this._formatNumberWithGranularity(numberOfUnits, 1, {
+          style: 'unit',
+          unit,
+          unitDisplay: 'narrow',
+        });
+        parts.push(part);
       }
     });
 
