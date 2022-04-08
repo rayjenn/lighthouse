@@ -77,7 +77,7 @@ jobs:
           ${{ env.DEVTOOLS_PATH }}/test/webtests
           ${{ github.workspace }}/.gclient
         key: devtools-build-artifacts-${{ github.run_id }}
-        restore-keys: devtools-build-artifacts-
+        # restore-keys: devtools-build-artifacts-
 
   web-tests:
     needs: [build]
@@ -149,11 +149,15 @@ jobs:
       with:
         node-version: 14.x
 
-    - name: Download artifact
-      uses: actions/download-artifact@v2
+    - name: Cache build artifacts
+      id: devtools-build-artifacts
+      uses: actions/cache@v3
       with:
-        name: devtools-build
-        path: ${{ github.workspace }}
+        path: |
+          ${{ env.DEVTOOLS_PATH }}/out/Default/gen/front_end
+          ${{ env.DEVTOOLS_PATH }}/test/webtests
+          ${{ github.workspace }}/.gclient
+        key: devtools-build-artifacts-${{ github.run_id }}
 
     - name: Download Blink Tools
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/download-blink-tools.sh
