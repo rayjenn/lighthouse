@@ -33,6 +33,22 @@ An audit can return a number of different [detail types](https://github.com/Goog
 | `'link'`                  | -                     | arbitrary link / url combination       |
 | `'text'\|'ms'\|'numeric'` | -                     |                                        |
 
+### Granularity
+
+The following detail types accept a `granularity` field:
+
+- `bytes`
+- `ms`
+- `numeric`
+
+`granularity` must either be a positive integer or power of 10. Some examples of valid values for `granularity`:
+
+- 0.1
+- 0.5
+- 0.01
+- 1
+
+The value will be rounded to that nearest number.
 
 <!--- https://docs.google.com/document/d/1KS6PGPYDfE_TWrRdw55Rd67P-g_MU4KdMetT3cTPHjI/edit#heading=h.32w9jjm4c70w -->
 ![Detail type examples](../assets/detail-type-examples.png)

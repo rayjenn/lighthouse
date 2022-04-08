@@ -22,9 +22,15 @@ const NBSP = '\xa0';
 describe('util helpers', () => {
   it('formats a number', () => {
     const i18n = new I18n('en', {...Util.UIStrings});
-    assert.strictEqual(i18n.formatNumber(10), '10.0');
-    assert.strictEqual(i18n.formatNumber(100.01), '100.0');
-    assert.strictEqual(i18n.formatNumber(13000.456), '13,000.5');
+    assert.strictEqual(i18n.formatNumber(10), '10');
+    assert.strictEqual(i18n.formatNumber(100.01), '100.01');
+    assert.strictEqual(i18n.formatNumber(13000.456), '13,000.456');
+    assert.strictEqual(i18n.formatNumber(13000.456444), '13,000.456');
+
+    assert.strictEqual(i18n.formatNumber(10, 0.1), '10.0');
+    assert.strictEqual(i18n.formatNumber(100.01, 0.1), '100.0');
+    assert.strictEqual(i18n.formatNumber(13000.456, 0.1), '13,000.5');
+
     assert.strictEqual(i18n.formatInteger(10), '10');
     assert.strictEqual(i18n.formatInteger(100.01), '100');
     assert.strictEqual(i18n.formatInteger(13000.6), '13,001');
@@ -130,7 +136,8 @@ describe('util helpers', () => {
     const number = 12346.858558;
 
     const i18n = new I18n('de', {...Util.UIStrings});
-    assert.strictEqual(i18n.formatNumber(number), '12.346,9');
+    assert.strictEqual(i18n.formatNumber(number), '12.346,859');
+    assert.strictEqual(i18n.formatNumber(number, 0.1), '12.346,9');
     assert.strictEqual(i18n.formatBytesToKiB(number), `12,1${NBSP}KiB`);
     assert.strictEqual(i18n.formatMilliseconds(number), `12.350${NBSP}ms`);
     assert.strictEqual(i18n.formatSeconds(number), `12,3${NBSP}Sek.`);
@@ -141,7 +148,8 @@ describe('util helpers', () => {
     const number = 12346.858558;
 
     const i18n = new I18n('en-XA', {...Util.UIStrings});
-    assert.strictEqual(i18n.formatNumber(number), '12.346,9');
+    assert.strictEqual(i18n.formatNumber(number), '12.346,859');
+    assert.strictEqual(i18n.formatNumber(number, 0.1), '12.346,9');
     assert.strictEqual(i18n.formatBytesToKiB(number), `12,1${NBSP}KiB`);
     assert.strictEqual(i18n.formatMilliseconds(number), `12.350${NBSP}ms`);
     assert.strictEqual(i18n.formatSeconds(number), `12,3${NBSP}Sek.`);

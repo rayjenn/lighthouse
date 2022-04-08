@@ -58,11 +58,16 @@ export class I18n {
   /**
    * Format number.
    * @param {number} number
-   * @param {number=} granularity Number of decimal places to include. Defaults to 0.1.
+   * @param {number=} granularity Number of decimal places to include.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatNumber(number, granularity = 0.1) {
-    return this._formatNumberWithGranularity(number, granularity);
+  formatNumber(number, granularity = undefined) {
+    if (granularity === undefined) {
+      return new Intl.NumberFormat(this._locale).format(number).replace(' ', NBSP2);
+    } else {
+      return this._formatNumberWithGranularity(number, granularity);
+    }
   }
 
   /**
