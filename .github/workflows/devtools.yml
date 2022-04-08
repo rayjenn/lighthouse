@@ -3,7 +3,7 @@ name: DevTools
 on:
   push:
     branches: [master]
-  pull_request: # run on all PRs, not just PRs to a particular branch
+  # pull_request: # run on all PRs, not just PRs to a particular branch
 
 env:
   DEPOT_TOOLS_PATH: ${{ github.workspace }}/depot-tools
@@ -68,15 +68,16 @@ jobs:
     - name: Roll Lighthouse + build DevTools
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/roll-devtools.sh
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
+    - name: Cache build artifacts
+      id: devtools-build-artifacts
+      uses: actions/cache@v3
       with:
-        name: devtools-build
         path: |
           ${{ env.DEVTOOLS_PATH }}/out/Default/gen/front_end
           ${{ env.DEVTOOLS_PATH }}/test/webtests
           ${{ github.workspace }}/.gclient
-        retention-days: 1
+        key: devtools-build-artifacts-${{ github.run_id }}
+        restore-keys: devtools-build-artifacts-
 
   web-tests:
     needs: [build]
@@ -93,11 +94,18 @@ jobs:
       with:
         node-version: 14.x
 
-    - name: Download artifact
-      uses: actions/download-artifact@v2
+    - name: Cache build artifacts
+      id: devtools-build-artifacts
+      uses: actions/cache@v3
       with:
-        name: devtools-build
         path: ${{ github.workspace }}
+        key: devtools-build-artifacts-${{ github.run_id }}
+
+    # - name: Download artifact
+    #   uses: actions/download-artifact@v2
+    #   with:
+    #     name: devtools-build
+    #     path: ${{ github.workspace }}
 
     - name: Download Blink Tools
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/download-blink-tools.sh
