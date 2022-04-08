@@ -432,7 +432,7 @@ class Util {
         const {cpuSlowdownMultiplier, requestLatencyMs} = throttling;
         // eslint-disable-next-line max-len
         cpuThrottling = `${Util.i18n.formatNumber(cpuSlowdownMultiplier)}x slowdown (DevTools)`;
-        networkThrottling = `${Util.i18n.formatMilliseconds(requestLatencyMs, 1)} HTTP RTT, ` +
+        networkThrottling = `${Util.i18n.formatMilliseconds(requestLatencyMs)} HTTP RTT, ` +
           `${Util.i18n.formatKbps(throttling.downloadThroughputKbps)} down, ` +
           `${Util.i18n.formatKbps(throttling.uploadThroughputKbps)} up (DevTools)`;
 

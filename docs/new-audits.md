@@ -46,9 +46,10 @@ The following detail types accept a `granularity` field:
 - 0.1
 - 0.5
 - 0.01
+- 0.001
 - 1
 
-The value will be rounded to that nearest number.
+The value will be rounded to that nearest number. If not provided, the default behavior is equivalent to `0.001`.
 
 <!--- https://docs.google.com/document/d/1KS6PGPYDfE_TWrRdw55Rd67P-g_MU4KdMetT3cTPHjI/edit#heading=h.32w9jjm4c70w -->
 ![Detail type examples](../assets/detail-type-examples.png)

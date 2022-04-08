@@ -32,25 +32,30 @@ export class I18n {
 
   /**
    * @param {number} number
-   * @param {number} granularity
+   * @param {number|undefined} granularity
    * @param {Intl.NumberFormatOptions} opts
    * @return {string}
    */
   _formatNumberWithGranularity(number, granularity, opts = {}) {
-    opts = {...opts};
-    const log10 = -Math.log10(granularity);
-    if (!Number.isFinite(log10) || (granularity > 1 && Math.floor(log10) !== log10)) {
-      throw new Error(`granularity of ${granularity} is invalid`);
+    if (granularity !== undefined) {
+      opts = {...opts};
+      const log10 = -Math.log10(granularity);
+      if (!Number.isFinite(log10) || (granularity > 1 && Math.floor(log10) !== log10)) {
+        throw new Error(`granularity of ${granularity} is invalid`);
+      }
+
+      if (granularity < 1) {
+        opts.minimumFractionDigits = opts.maximumFractionDigits = Math.ceil(log10);
+      }
+
+      number = Math.round(number / granularity) * granularity;
+
+      // Avoid displaying a negative value that rounds to zero as "0".
+      if (Object.is(number, -0)) number = 0;
+    } else if (Math.abs(number) <= 0.0001) {
+      // Also avoids "-0".
+      number = 0;
     }
-
-    if (granularity < 1) {
-      opts.minimumFractionDigits = opts.maximumFractionDigits = Math.ceil(log10);
-    }
-
-    number = Math.round(number / granularity) * granularity;
-
-    // Avoid displaying a negative value that rounds to zero as "0".
-    if (Object.is(number, -0)) number = 0;
 
     return new Intl.NumberFormat(this._locale, opts).format(number).replace(' ', NBSP2);
   }
@@ -58,16 +63,12 @@ export class I18n {
   /**
    * Format number.
    * @param {number} number
-   * @param {number=} granularity Number of decimal places to include.
+   * @param {number=} granularity Controls how coarse the displayed value is.
    *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
   formatNumber(number, granularity = undefined) {
-    if (granularity === undefined) {
-      return new Intl.NumberFormat(this._locale).format(number).replace(' ', NBSP2);
-    } else {
-      return this._formatNumberWithGranularity(number, granularity);
-    }
+    return this._formatNumberWithGranularity(number, granularity);
   }
 
   /**
@@ -92,25 +93,28 @@ export class I18n {
 
   /**
    * @param {number} size
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 0.1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatBytesToKiB(size, granularity = 0.1) {
+  formatBytesToKiB(size, granularity = undefined) {
     return this._formatNumberWithGranularity(size / KiB, granularity) + `${NBSP2}KiB`;
   }
 
   /**
    * @param {number} size
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 0.1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatBytesToMiB(size, granularity = 0.1) {
+  formatBytesToMiB(size, granularity = undefined) {
     return this._formatNumberWithGranularity(size / MiB, granularity) + `${NBSP2}MiB`;
   }
 
   /**
    * @param {number} size
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
   formatBytes(size, granularity = 1) {
@@ -123,10 +127,11 @@ export class I18n {
 
   /**
    * @param {number} size
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 0.1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatBytesWithBestUnit(size, granularity = 0.1) {
+  formatBytesWithBestUnit(size, granularity = undefined) {
     if (size >= MiB) return this.formatBytesToMiB(size, granularity);
     if (size >= KiB) return this.formatBytesToKiB(size, granularity);
     return this._formatNumberWithGranularity(size, granularity, {
@@ -138,10 +143,11 @@ export class I18n {
 
   /**
    * @param {number} size
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatKbps(size, granularity = 1) {
+  formatKbps(size, granularity = undefined) {
     return this._formatNumberWithGranularity(size, granularity, {
       style: 'unit',
       unit: 'kilobit-per-second',
@@ -151,10 +157,11 @@ export class I18n {
 
   /**
    * @param {number} ms
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 10
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatMilliseconds(ms, granularity = 10) {
+  formatMilliseconds(ms, granularity = undefined) {
     return this._formatNumberWithGranularity(ms, granularity, {
       style: 'unit',
       unit: 'millisecond',
@@ -164,10 +171,11 @@ export class I18n {
 
   /**
    * @param {number} ms
-   * @param {number=} granularity Controls how coarse the displayed value is, defaults to 0.1
+   * @param {number=} granularity Controls how coarse the displayed value is.
+   *                              If undefined, the number will be displayed in full.
    * @return {string}
    */
-  formatSeconds(ms, granularity = 0.1) {
+  formatSeconds(ms, granularity = undefined) {
     return this._formatNumberWithGranularity(ms / 1000, granularity, {
       style: 'unit',
       unit: 'second',
