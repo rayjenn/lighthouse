@@ -433,11 +433,9 @@ class Util {
         break;
       case 'devtools': {
         const {cpuSlowdownMultiplier, requestLatencyMs} = throttling;
-        // TODO: better api in i18n formatter such that this isn't needed.
-        const cpuGranularity = Number.isInteger(cpuSlowdownMultiplier) ? 1 : 0.1;
         // eslint-disable-next-line max-len
-        cpuThrottling = `${Util.i18n.formatNumber(cpuSlowdownMultiplier, cpuGranularity)}x slowdown (DevTools)`;
-        networkThrottling = `${Util.i18n.formatMilliseconds(requestLatencyMs, 1)} HTTP RTT, ` +
+        cpuThrottling = `${Util.i18n.formatNumber(cpuSlowdownMultiplier)}x slowdown (DevTools)`;
+        networkThrottling = `${Util.i18n.formatMilliseconds(requestLatencyMs)} HTTP RTT, ` +
           `${Util.i18n.formatKbps(throttling.downloadThroughputKbps)} down, ` +
           `${Util.i18n.formatKbps(throttling.uploadThroughputKbps)} up (DevTools)`;
 
@@ -451,10 +449,8 @@ class Util {
       }
       case 'simulate': {
         const {cpuSlowdownMultiplier, rttMs, throughputKbps} = throttling;
-        // TODO: better api in i18n formatter such that this isn't needed.
-        const cpuGranularity = Number.isInteger(cpuSlowdownMultiplier) ? 1 : 0.1;
         // eslint-disable-next-line max-len
-        cpuThrottling = `${Util.i18n.formatNumber(cpuSlowdownMultiplier, cpuGranularity)}x slowdown (Simulated)`;
+        cpuThrottling = `${Util.i18n.formatNumber(cpuSlowdownMultiplier)}x slowdown (Simulated)`;
         networkThrottling = `${Util.i18n.formatMilliseconds(rttMs)} TCP RTT, ` +
           `${Util.i18n.formatKbps(throughputKbps)} throughput (Simulated)`;
 
