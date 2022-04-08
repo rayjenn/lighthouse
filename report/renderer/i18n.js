@@ -40,7 +40,8 @@ export class I18n {
     opts = {...opts};
     const log10 = -Math.log10(granularity);
     if (!Number.isFinite(log10) || (granularity > 1 && !Number.isInteger(log10))) {
-      console.warn(`granularity of ${granularity} is invalid, results may be unexpected`);
+      console.warn(`granularity of ${granularity} is invalid, default to value of 1`);
+      granularity = 1;
     }
 
     if (granularity < 1) {
