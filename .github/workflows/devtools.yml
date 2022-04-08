@@ -98,7 +98,10 @@ jobs:
       id: devtools-build-artifacts
       uses: actions/cache@v3
       with:
-        path: ${{ github.workspace }}
+        path: |
+          ${{ env.DEVTOOLS_PATH }}/out/Default/gen/front_end
+          ${{ env.DEVTOOLS_PATH }}/test/webtests
+          ${{ github.workspace }}/.gclient
         key: devtools-build-artifacts-${{ github.run_id }}
 
     # - name: Download artifact
