@@ -73,7 +73,7 @@ describe('util helpers', () => {
 
     // eslint-disable-next-line max-len
     assert.equal(descriptions.networkThrottling, '150\xa0ms TCP RTT, 1,600\xa0kb/s throughput (Simulated)');
-    assert.equal(descriptions.cpuThrottling, '2.0x slowdown (Simulated)');
+    assert.equal(descriptions.cpuThrottling, '2x slowdown (Simulated)');
   });
 
   describe('#prepareReportResult', () => {
