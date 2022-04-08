@@ -2,9 +2,8 @@ name: DevTools
 
 on:
   push:
-    branches: [master]
-  # 1
-  # pull_request: # run on all PRs, not just PRs to a particular branch
+    # branches: [master]
+  pull_request: # run on all PRs, not just PRs to a particular branch
 
 env:
   DEPOT_TOOLS_PATH: ${{ github.workspace }}/depot-tools
