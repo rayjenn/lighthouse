@@ -39,8 +39,8 @@ export class I18n {
   _formatNumberWithGranularity(number, granularity, opts = {}) {
     opts = {...opts};
     const log10 = -Math.log10(granularity);
-    if (!Number.isFinite(log10) || (granularity > 1 && Math.floor(log10) !== log10)) {
-      throw new Error(`granularity of ${granularity} is invalid`);
+    if (!Number.isFinite(log10) || (granularity > 1 && !Number.isInteger(log10))) {
+      console.warn(`granularity of ${granularity} is invalid, results may be unexpected`);
     }
 
     if (granularity < 1) {
