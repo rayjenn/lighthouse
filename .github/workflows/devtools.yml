@@ -177,5 +177,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1
       with:
-        name: Smokehouse (devtools smoke ${{ matrix.smoke-test-shard }}/${{ strategy.job-total }})
+        name: Smokehouse (devtools smoke)
         path: ${{ github.workspace }}/lighthouse/.tmp/smokehouse-ci-failures/
