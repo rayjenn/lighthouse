@@ -103,12 +103,6 @@ jobs:
           ${{ github.workspace }}/.gclient
         key: devtools-build-artifacts-${{ github.run_id }}
 
-    # - name: Download artifact
-    #   uses: actions/download-artifact@v2
-    #   with:
-    #     name: devtools-build
-    #     path: ${{ github.workspace }}
-
     - name: Download Blink Tools
       run: bash $GITHUB_WORKSPACE/lighthouse/lighthouse-core/test/chromium-web-tests/download-blink-tools.sh
     - name: Download Content Shell
