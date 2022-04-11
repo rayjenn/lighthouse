@@ -52,7 +52,7 @@ export class I18n {
 
       // Avoid displaying a negative value that rounds to zero as "0".
       if (Object.is(number, -0)) number = 0;
-    } else if (Math.abs(number) <= 0.0001) {
+    } else if (Math.abs(number) <= 0.0005) {
       // Also avoids "-0".
       number = 0;
     }

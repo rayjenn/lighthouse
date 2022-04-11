@@ -42,13 +42,15 @@ The following detail types accept a `granularity` field:
 - `ms`
 - `numeric`
 
-`granularity` must either be a positive integer or power of 10. Some examples of valid values for `granularity`:
+`granularity` must either be between 0 - 1 (excluding zero), or any positive integer power of 10. Some examples of valid values for `granularity`:
 
+- 0.001
+- 0.01
 - 0.1
 - 0.5
-- 0.01
-- 0.001
 - 1
+- 10
+- 100
 
 The formatted value will be rounded to that nearest number. If not provided, the default is `0.1` (except for `ms`, which is `10`).
 

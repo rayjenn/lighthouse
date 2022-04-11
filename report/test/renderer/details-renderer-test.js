@@ -87,6 +87,55 @@ describe('DetailsRenderer', () => {
           '--thumbnail not set');
     });
 
+    it('renders with default granularity', () => {
+      const el = renderer.render({
+        type: 'table',
+        headings: [
+          {text: '', key: 'bytes', itemType: 'bytes'},
+          {text: '', key: 'numeric', itemType: 'numeric'},
+          {text: '', key: 'ms', itemType: 'ms'},
+          // Verify that 0 is ignored.
+          {text: '', key: 'ms', itemType: 'ms', granularity: 0},
+        ],
+        items: [
+          {
+            bytes: 1234.567,
+            numeric: 1234.567,
+            ms: 1234.567,
+          },
+        ],
+      });
+
+      assert.equal(el.querySelectorAll('td').length, 4, 'did not render table cells');
+      assert.equal(el.querySelectorAll('td')[0].textContent, '1.2\xa0KiB');
+      assert.equal(el.querySelectorAll('td')[1].textContent, '1,234.6');
+      assert.equal(el.querySelectorAll('td')[2].textContent, '1,230\xa0ms');
+      assert.equal(el.querySelectorAll('td')[3].textContent, '1,230\xa0ms');
+    });
+
+    it('renders with custom granularity', () => {
+      const el = renderer.render({
+        type: 'table',
+        headings: [
+          {text: '', key: 'bytes', itemType: 'bytes', granularity: 0.01},
+          {text: '', key: 'numeric', itemType: 'numeric', granularity: 100},
+          {text: '', key: 'ms', itemType: 'ms', granularity: 1},
+        ],
+        items: [
+          {
+            bytes: 1234.567,
+            numeric: 1234.567,
+            ms: 1234.567,
+          },
+        ],
+      });
+
+      assert.equal(el.querySelectorAll('td').length, 3, 'did not render table cells');
+      assert.equal(el.querySelectorAll('td')[0].textContent, '1.21\xa0KiB');
+      assert.equal(el.querySelectorAll('td')[1].textContent, '1,200');
+      assert.equal(el.querySelectorAll('td')[2].textContent, '1,235\xa0ms');
+    });
+
     it('renders critical request chains', () => {
       const details = {
         type: 'criticalrequestchain',
