@@ -17,8 +17,12 @@ jobs:
       # e.g. if set 1 fails, continue with set 2 anyway
       fail-fast: false
     runs-on: ubuntu-latest
-    # Job named e.g. "Chrome stable, batch 1".
-    name: Chrome ${{ matrix.chrome-channel }}, batch ${{ matrix.smoke-test-shard }}
+    env:
+      # The total number of shards. Set dynamically when length of *single* matrix variable is
+      # computable. See https://github.community/t/get-length-of-strategy-matrix-or-get-all-matrix-options/18342
+      SHARD_TOTAL: 3
+    # Job named e.g. "Chrome stable 1/3".
+    name: Chrome ${{ matrix.chrome-channel }} ${{ matrix.smoke-test-shard }}/$SHARD_TOTAL
 
     steps:
     - name: git clone
@@ -49,7 +53,7 @@ jobs:
     - run: sudo apt-get install xvfb
     - name: Run smoke tests
       run: |
-        xvfb-run --auto-servernum yarn c8 yarn smoke --debug -j=1 --retries=2 --shard=${{ matrix.smoke-test-shard }}/${{ strategy.job-total }}
+        xvfb-run --auto-servernum yarn c8 yarn smoke --debug -j=1 --retries=2 --shard=${{ matrix.smoke-test-shard }}/$SHARD_TOTAL
         yarn c8 report --reporter text-lcov > smoke-coverage.lcov
 
     - name: Upload test coverage to Codecov
