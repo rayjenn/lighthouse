@@ -32,6 +32,8 @@ describe('util helpers', () => {
     assert.strictEqual(i18n.formatNumber(13000.456, 0.1), '13,000.5');
 
     assert.strictEqual(i18n.formatNumber(0), '0');
+    assert.strictEqual(i18n.formatNumber(-0), '0');
+    assert.strictEqual(i18n.formatNumber(-0, 0.1), '0.0');
     assert.strictEqual(i18n.formatNumber(0.000001), '0');
     assert.strictEqual(i18n.formatNumber(-0.000001), '0');
     assert.strictEqual(i18n.formatNumber(0.000001, 0.1), '0.0');
