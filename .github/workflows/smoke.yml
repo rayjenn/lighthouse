@@ -22,7 +22,7 @@ jobs:
       # computable. See https://github.community/t/get-length-of-strategy-matrix-or-get-all-matrix-options/18342
       SHARD_TOTAL: 3
     # Job named e.g. "Chrome stable 1/3".
-    name: Chrome ${{ matrix.chrome-channel }} ${{ matrix.smoke-test-shard }}/$SHARD_TOTAL
+    name: Chrome ${{ matrix.chrome-channel }} ${{ matrix.smoke-test-shard }}/${{env.SHARD_TOTAL}}
 
     steps:
     - name: git clone
