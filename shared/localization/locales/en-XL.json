@@ -1067,6 +1067,9 @@
   "lighthouse-core/audits/installable-manifest.js | protocol-timeout": {
     "message": "L̂íĝh́t̂h́ôúŝé ĉóûĺd̂ ńôt́ d̂ét̂ér̂ḿîńê íf̂ t́ĥér̂é ŵáŝ á ŝér̂v́îćê ẃôŕk̂ér̂. Ṕl̂éâśê t́r̂ý ŵít̂h́ â ńêẃêŕ v̂ér̂śîón̂ óf̂ Ćĥŕôḿê."
   },
+  "lighthouse-core/audits/installable-manifest.js | scheme-not-supported-for-webapk": {
+    "message": "T̂h́ê ḿâńîf́êśt̂ ÚR̂Ĺ ŝćĥém̂é îś n̂ót̂ śûṕp̂ór̂t́êd́ ôń Âńd̂ŕôíd̂."
+  },
   "lighthouse-core/audits/installable-manifest.js | start-url-not-valid": {
     "message": "M̂án̂íf̂éŝt́ ŝt́âŕt̂ ÚR̂Ĺ îś n̂ót̂ v́âĺîd́"
   },
