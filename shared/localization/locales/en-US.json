@@ -1068,7 +1068,7 @@
     "message": "Lighthouse could not determine if there was a service worker. Please try with a newer version of Chrome."
   },
   "lighthouse-core/audits/installable-manifest.js | scheme-not-supported-for-webapk": {
-    "message": "The manifest URL scheme is not supported on Android."
+    "message": "The manifest URL scheme ({scheme}) is not supported on Android."
   },
   "lighthouse-core/audits/installable-manifest.js | start-url-not-valid": {
     "message": "Manifest start URL is not valid"

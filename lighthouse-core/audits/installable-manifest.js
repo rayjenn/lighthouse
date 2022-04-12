@@ -97,8 +97,11 @@ const UIStrings = {
   'protocol-timeout': `Lighthouse could not determine if there was a service worker. Please try with a newer version of Chrome.`,
   /** Message logged when the web app has been uninstalled o desktop, signalling that the install banner state is being reset. */
   'pipeline-restarted': 'PWA has been uninstalled and installability checks resetting.',
-  /** Error message explaining that URL of the manifest uses a scheme that is not supported on Android. */
-  'scheme-not-supported-for-webapk': 'The manifest URL scheme is not supported on Android.',
+  /**
+   * @description Error message explaining that the URL of the manifest uses a scheme that is not supported on Android.
+   * @example {data:} scheme
+   */
+  'scheme-not-supported-for-webapk': 'The manifest URL scheme ({scheme}) is not supported on Android.',
 };
 /* eslint-enable max-len */
 
@@ -157,6 +160,17 @@ class InstallableManifest extends Audit {
 
       // @ts-expect-error errorIds from protocol should match up against the strings dict
       const matchingString = UIStrings[err.errorId];
+
+      if (err.errorId === 'scheme-not-supported-for-webapk') {
+        // If there was no manifest, then there will be at lest one other installability error.
+        // We can ignore this error if that's the case.
+        const manifestUrl = artifacts.WebAppManifest?.url;
+        if (!manifestUrl) continue;
+
+        const scheme = new URL(manifestUrl).protocol;
+        i18nErrors.push(str_(matchingString, {scheme}));
+        continue;
+      }
 
       // Handle an errorId we don't recognize.
       if (matchingString === undefined) {

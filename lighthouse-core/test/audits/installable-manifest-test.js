@@ -193,6 +193,39 @@ describe('PWA: webapp install banner audit', () => {
         assert.strictEqual(result.score, 1);
       });
     });
+
+    it('adds scheme to invalid scheme error message', async () => {
+      const artifacts = generateMockArtifacts();
+      artifacts.WebAppManifest.url = 'data:application/json;base64,AAAAAAAAAA';
+      artifacts.InstallabilityErrors.errors.push({
+        errorId: 'scheme-not-supported-for-webapk',
+        errorArguments: [],
+      });
+      const context = generateMockAuditContext();
+
+      const result = await InstallableManifestAudit.audit(artifacts, context);
+      expect(result.score).toEqual(0);
+      expect(result.details.items[0].reason).toBeDisplayString(
+        'The manifest URL scheme (data:) is not supported on Android.'
+      );
+    });
+
+    it('ignores invalid scheme error if there was no manifest url', async () => {
+      const artifacts = generateMockArtifacts();
+      artifacts.WebAppManifest = undefined;
+      artifacts.InstallabilityErrors.errors.push(
+        {errorId: 'no-manifest', errorArguments: []},
+        {errorId: 'scheme-not-supported-for-webapk', errorArguments: []}
+      );
+      const context = generateMockAuditContext();
+
+      const result = await InstallableManifestAudit.audit(artifacts, context);
+      expect(result.score).toEqual(0);
+      expect(result.details.items).toHaveLength(1);
+      expect(result.details.items[0].reason).toBeDisplayString(
+        'Page has no manifest <link> URL'
+      );
+    });
   });
 
   describe('warnings', () => {
