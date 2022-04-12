@@ -82,11 +82,12 @@ class TraceProcessor {
    * Returns true if the event is a navigation start event of a document whose URL seems valid.
    *
    * @param {LH.TraceEvent} event
+   * @return {boolean}
    */
   static _isNavigationStartOfInterest(event) {
-    return event.name === 'navigationStart' &&
-      event.args.data?.documentLoaderURL &&
-      ACCEPTABLE_NAVIGATION_URL_REGEX.test(event.args.data.documentLoaderURL);
+    if (event.name !== 'navigationStart') return false;
+    if (!event.args.data?.documentLoaderURL) return false;
+    return ACCEPTABLE_NAVIGATION_URL_REGEX.test(event.args.data.documentLoaderURL);
   }
 
   /**
